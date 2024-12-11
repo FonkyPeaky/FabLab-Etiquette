@@ -3,17 +3,110 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 namespace FabLab_Etiquette.Models
 {
-    public class LabelModel
+    public class LabelModel : INotifyPropertyChanged
     {
-        public double X { get; set; } // Position X
-        public double Y { get; set; } // Position Y
-        public double Width { get; set; } // Largeur
-        public double Height { get; set; } // Hauteur
-        public string Text { get; set; } // Texte
-        public string FontFamily { get; set; } = "Arial"; // Police
-        public double FontSize { get; set; } = 20; // Taille de la police
+        private double _x;
+        private double _y;
+        private BitmapImage _image;
+        public event PropertyChangedEventHandler PropertyChanged;
+        private string _fontFamily = "Arial"; // Défaut : Arial
+        private double _fontSize = 20; // Défaut : 20
+        private double _width;
+        private double _height;
+        private string _text;
+        private Brush _backgroundColor = Brushes.White; // Couleur par défaut
+        private Brush _borderColor = Brushes.Red;
+        private double _borderThickness = 2; // Épaisseur par défaut
+
+        public BitmapImage Image
+        {
+            get => _image;
+            set
+            {
+                _image = value;
+                OnPropertyChanged();
+            }
+        }
+        public double BorderThickness
+        {
+            get => _borderThickness;
+            set
+            {
+                _borderThickness = value;
+                OnPropertyChanged();
+            }
+        }
+        public Brush BorderColor
+        {
+            get => _borderColor;
+            set
+            {
+                _borderColor = value;
+                OnPropertyChanged();
+            }
+        }
+        public Brush BackgroundColor
+        {
+            get => _backgroundColor;
+            set
+            {
+                _backgroundColor = value;
+                OnPropertyChanged();
+            }
+        }
+        public double X
+        {
+            get => _x;
+            set { _x = value; OnPropertyChanged(); }
+        }
+
+        public double Y
+        {
+            get => _y;
+            set { _y = value; OnPropertyChanged(); }
+        }
+        
+        public double Width
+        {
+            get => _width;
+            set { _width = value; OnPropertyChanged(); }
+        }
+       
+        public double Height
+        {
+            get => _height;
+            set { _height = value; OnPropertyChanged(); }
+        }
+
+        public string Text
+        {
+            get => _text;
+            set { _text = value; OnPropertyChanged(); }
+        }
+
+        public string FontFamily
+        {
+            get => _fontFamily;
+            set { _fontFamily = value; OnPropertyChanged(); }
+        }
+
+        public double FontSize
+        {
+            get => _fontSize;
+            set { _fontSize = value; OnPropertyChanged(); }
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }
