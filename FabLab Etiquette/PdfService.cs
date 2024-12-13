@@ -1,4 +1,6 @@
 ﻿using FabLab_Etiquette.Models;
+using FabLab_Etiquette.Views;
+using PdfSharp;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using System.Collections.Generic;
@@ -17,51 +19,96 @@ namespace FabLab_Etiquette.Services
         }
         public static void CreateLabelsPdf(IEnumerable<LabelModel> labels, string outputPath)
         {
-            // Créer un nouveau document PDF
-            PdfDocument document = new PdfDocument();
-            document.Info.Title = "Étiquettes FabLab";
+            var document = new PdfDocument();
+            var page = document.AddPage();
+            page.Size = PageSize.A4;
 
-            // Ajouter une page
-            PdfPage page = document.AddPage();
-            page.Width = XUnit.FromMillimeter(600);
-            page.Height = XUnit.FromMillimeter(300);
-
-            // Obtenir un contexte graphique
-            XGraphics gfx = XGraphics.FromPdfPage(page);
+            var gfx = XGraphics.FromPdfPage(page);
 
             foreach (var label in labels)
             {
-                // Dessiner le fond
-                XBrush backgroundBrush = new XSolidBrush(ConvertToXColor((label.BackgroundColor as SolidColorBrush).Color));
-                gfx.DrawRectangle(backgroundBrush, label.X, label.Y, label.Width, label.Height);
+                XBrush brush = null;
+                XPen pen = null;
 
-                // Dessiner les bordures
-                XPen borderPen = new XPen(ConvertToXColor((label.BorderColor as SolidColorBrush).Color), label.BorderThickness);
-                gfx.DrawRectangle(borderPen, label.X, label.Y, label.Width, label.Height);
-
-                // Dessiner le texte
-                XFont font = new XFont(label.FontFamily, label.FontSize);
-                gfx.DrawString(label.Text, font, XBrushes.Black, new XPoint(label.X + 5, label.Y + 15));
-
-                // Dessiner l'image si disponible
-                if (label.Image != null)
+                // Définir les couleurs en fonction de l'action
+                if (label.Action == "Découpe")
                 {
-                    using (var stream = new MemoryStream())
+                    pen = new XPen(XColors.Red, label.BorderThickness);
+                }
+                else if (label.Action == "Gravure")
+                {
+                    pen = new XPen(XColors.Black, label.BorderThickness);
+                    brush = new XSolidBrush(XColors.Black);
+                }
+
+                // Dessiner les formes en fonction de la propriété Shape
+                if (label.Shape == "Rectangle")
+                {
+                    gfx.DrawRectangle(pen, brush, label.X, label.Y, label.Width, label.Height);
+                }
+                else if (label.Shape == "Ellipse")
+                {
+                    gfx.DrawEllipse(pen, brush, label.X, label.Y, label.Width, label.Height);
+                }
+                else if (label.Shape == "Losange")
+                {
+                    var points = new[]
                     {
-                        BitmapEncoder encoder = new PngBitmapEncoder();
-                        encoder.Frames.Add(BitmapFrame.Create(label.Image));
-                        encoder.Save(stream);
+                new XPoint(label.X + label.Width / 2, label.Y), // Haut
+                new XPoint(label.X + label.Width, label.Y + label.Height / 2), // Droite
+                new XPoint(label.X + label.Width / 2, label.Y + label.Height), // Bas
+                new XPoint(label.X, label.Y + label.Height / 2) // Gauche
+            };
+                    gfx.DrawPolygon(pen, brush, points, XFillMode.Winding);
+                }
 
-                        stream.Seek(0, SeekOrigin.Begin);
-                        XImage xImage = XImage.FromStream(stream);
+                // Ajouter le texte
+                if (!string.IsNullOrWhiteSpace(label.Text))
+                {
+                    var font = new XFont(label.FontFamily, label.FontSize);
 
-                        gfx.DrawImage(xImage, label.X, label.Y, label.Width, label.Height);
-                    }
+                    var textBrush = label.Action?.ToLower() == "gravure" ? XBrushes.Black : XBrushes.Black;
+
+                    // Dessiner le texte
+                    gfx.DrawString(label.Text, font, textBrush,
+                        new XRect(label.X, label.Y, label.Width, label.Height),
+                        XStringFormats.Center);
+
+                    // Centrer le texte
+                    var layoutRect = new XRect(label.X, label.Y, label.Width, label.Height);
+                    var format = new XStringFormat
+                    {
+                        Alignment = XStringAlignment.Center,
+                        LineAlignment = XLineAlignment.Center
+                    };
+                    gfx.DrawString(label.Text, font, textBrush, layoutRect, format);
                 }
             }
 
-            document.Save(outputPath);
-            System.Windows.MessageBox.Show($"PDF généré avec succès : {outputPath}");
+            // Sauvegarder le PDF
+            try
+            {
+                
+                if (File.Exists(outputPath))
+                {
+                    // Vérifier si le fichier est ouvert par un autre processus
+                    File.Delete(outputPath);
+                }
+
+                // Sauvegarder le PDF
+                document.Save(outputPath);
+
+                // Ouvrir l'aperçu PDF dans l'application (si besoin)
+                var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
+                view?.PdfPreview.Navigate(outputPath);
+            }
+            catch (IOException ex)
+            {
+                System.Windows.MessageBox.Show($"Adobe Reader a besoin d'etre actualisé veuillez cliquer sur OK .\n\nDétails : {ex.Message}");
+            }
+
+            document.Close();
         }
+
     }
 }

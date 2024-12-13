@@ -3,10 +3,14 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Créer des Étiquettes PDF" Height="1000" Width="1500">
     <Grid>
-        <!-- Définir deux colonnes : une pour le formulaire, l'autre pour le Canvas -->
+        <!-- Définition des colonnes -->
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*" />
+            <!-- Formulaire -->
             <ColumnDefinition Width="3*" />
+            <!-- Prévisualisation Canvas -->
+            <ColumnDefinition Width="3*" />
+            <!-- Prévisualisation PDF -->
         </Grid.ColumnDefinitions>
 
         <!-- Formulaire et liste des étiquettes (colonne 0) -->
@@ -50,6 +54,28 @@
 
             <TextBlock Text="Position Y :" />
             <TextBox Text="{Binding SelectedLabel.Y, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
+            <TextBlock Text="Alignement horizontal :" />
+            <ComboBox SelectedItem="{Binding SelectedLabel.HorizontalAlignment, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10">
+                <ComboBox.ItemsSource>
+                    <x:Array Type="{x:Type sys:String}" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                        <sys:String>Gauche</sys:String>
+                        <sys:String>Centre</sys:String>
+                        <sys:String>Droite</sys:String>
+                    </x:Array>
+                </ComboBox.ItemsSource>
+            </ComboBox>
+
+            <TextBlock Text="Alignement vertical :" />
+            <ComboBox SelectedItem="{Binding SelectedLabel.VerticalAlignment, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10">
+                <ComboBox.ItemsSource>
+                    <x:Array Type="{x:Type sys:String}" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                        <sys:String>Haut</sys:String>
+                        <sys:String>Milieu</sys:String>
+                        <sys:String>Bas</sys:String>
+                    </x:Array>
+                </ComboBox.ItemsSource>
+            </ComboBox>
+
 
             <TextBlock Text="Police :" />
             <ComboBox SelectedItem="{Binding SelectedLabel.FontFamily, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10">
@@ -66,67 +92,60 @@
 
             <TextBlock Text="Taille de la police :" />
             <TextBox Text="{Binding SelectedLabel.FontSize, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
-            <TextBlock Text="Couleur de fond :" />
-            <ComboBox SelectedItem="{Binding SelectedLabel.BackgroundColor, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10">
+
+            <TextBlock Text="Forme :" />
+            <ComboBox SelectedItem="{Binding SelectedLabel.Shape, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10">
                 <ComboBox.ItemsSource>
-                    <x:Array Type="{x:Type Brush}" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-                        <SolidColorBrush>White</SolidColorBrush>
-                        <SolidColorBrush>LightGray</SolidColorBrush>
-                        <SolidColorBrush>Yellow</SolidColorBrush>
-                        <SolidColorBrush>LightBlue</SolidColorBrush>
+                    <x:Array Type="{x:Type sys:String}" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                        <sys:String>Rectangle</sys:String>
+                        <sys:String>Ellipse</sys:String>
+                        <sys:String>Losange</sys:String>
                     </x:Array>
                 </ComboBox.ItemsSource>
             </ComboBox>
 
-            <TextBlock Text="Couleur de la bordure :" />
-            <ComboBox SelectedItem="{Binding SelectedLabel.BorderColor, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10">
+            <TextBlock Text="Action :" />
+            <ComboBox SelectedItem="{Binding SelectedLabel.Action, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10">
                 <ComboBox.ItemsSource>
-                    <x:Array Type="{x:Type Brush}" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-                        <SolidColorBrush>Red</SolidColorBrush>
-                        <SolidColorBrush>Black</SolidColorBrush>
-                        <SolidColorBrush>Blue</SolidColorBrush>
-                        <SolidColorBrush>Green</SolidColorBrush>
+                    <x:Array Type="{x:Type sys:String}" xmlns:sys="clr-namespace:System;assembly=mscorlib">
+                        <sys:String>Gravure</sys:String>
+                        <sys:String>Découpe</sys:String>
                     </x:Array>
                 </ComboBox.ItemsSource>
             </ComboBox>
 
-            <TextBlock Text="Épaisseur de la bordure :" />
-            <TextBox Text="{Binding SelectedLabel.BorderThickness, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,0,10" />
-
-            <!-- Bouton pour réorganiser les étiquettes -->
+            <!-- Boutons -->
             <Button Content="Réorganiser les étiquettes"
                     Command="{Binding RearrangeLabelsCommand}"
                     Width="200"
                     Margin="0,10,0,0" />
-
-            <!-- Bouton pour générer le PDF -->
             <Button Content="Générer le PDF"
                     Command="{Binding GeneratePdfCommand}"
                     Width="200"
                     Margin="0,10,0,0" />
-
             <Button Content="Ajouter une image"
                     Command="{Binding AddImageCommand}"
                     Width="200"
                     Margin="0,10,0,0" />
-
             <Button Content="Aligner les étiquettes"
                     Command="{Binding AlignLabelsCommand}"
                     Width="200"
                     Margin="0,10,0,0" />
-
         </StackPanel>
 
-        <!-- Canvas pour prévisualisation (colonne 1) -->
+        <!-- Canvas pour prévisualisation des étiquettes (colonne 1) -->
         <Canvas x:Name="PreviewCanvas"
-            Grid.Column="1"
-            Background="LightGray"
-            Width="844"
-            Height="500"
-            HorizontalAlignment="Center"
-            VerticalAlignment="Top" Margin="0,205,0,0"/>
-        
-        
+                Grid.Column="1"
+                Background="LightGray"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                Margin="10" />
+
+        <!-- Zone pour l'aperçu PDF (colonne 2) -->
+        <WebBrowser x:Name="PdfPreview"
+                    Grid.Column="2"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    Margin="10" />
     </Grid>
-    
 </Window>

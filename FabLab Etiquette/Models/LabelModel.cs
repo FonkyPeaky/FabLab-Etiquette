@@ -25,7 +25,36 @@ namespace FabLab_Etiquette.Models
         private Brush _backgroundColor = Brushes.White; // Couleur par défaut
         private Brush _borderColor = Brushes.Red;
         private double _borderThickness = 2; // Épaisseur par défaut
+        private string _shape = "Rectangle"; // Forme par défaut : Rectangle
+        private string _actionType;
+        public string HorizontalAlignment { get; set; } = "Centre"; // Par défaut centré
+        public string VerticalAlignment { get; set; } = "Milieu"; // Par défaut au milieu
+        public string Action { get; set; } = "Découpe"; // Par défaut, une étiquette sera en "Découpe".
 
+
+        public LabelModel()
+        {
+            ActionType = "Découpe"; // Par défaut
+        }
+
+        public string ActionType
+        {
+            get => _actionType;
+            set
+            {
+                _actionType = value;
+                OnPropertyChanged();
+            }
+        }
+        public string Shape
+        {
+            get => _shape;
+            set
+            {
+                _shape = value;
+                OnPropertyChanged();
+            }
+        }
         public BitmapImage Image
         {
             get => _image;

@@ -30,6 +30,19 @@ namespace FabLab_Etiquette.Views
                 viewModel.Labels.CollectionChanged += (s, e) => DrawLabels();
             }
         }
+
+        public void UpdatePdfPreview(string pdfPath)
+        {
+            if (System.IO.File.Exists(pdfPath))
+            {
+                PdfPreview.Navigate(new Uri(pdfPath));
+            }
+            else
+            {
+                System.Windows.MessageBox.Show("Impossible de trouver le fichier PDF.");
+            }
+        }
+
         public void DrawLabels()
         {
             System.Diagnostics.Debug.WriteLine("Méthode DrawLabels appelée !");
@@ -42,12 +55,18 @@ namespace FabLab_Etiquette.Views
 
             foreach (var label in viewModel.Labels)
             {
+                if (label == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Étiquette invalide détectée et ignorée.");
+                    continue;
+                }
+
                 // Dessiner le fond
                 var backgroundRect = new Rectangle
                 {
                     Width = label.Width,
                     Height = label.Height,
-                    Fill = label.BackgroundColor,
+                    Fill = label.BackgroundColor ?? Brushes.White,
                     StrokeThickness = 0
                 };
                 Canvas.SetLeft(backgroundRect, label.X);
@@ -59,28 +78,13 @@ namespace FabLab_Etiquette.Views
                 {
                     Width = label.Width,
                     Height = label.Height,
-                    Stroke = label.BorderColor,
+                    Stroke = Brushes.Red, // Bordure toujours rouge pour découpe
                     StrokeThickness = label.BorderThickness,
                     Fill = Brushes.Transparent
                 };
                 Canvas.SetLeft(borderRect, label.X);
                 Canvas.SetTop(borderRect, label.Y);
                 PreviewCanvas.Children.Add(borderRect);
-
-                // Créer un rectangle pour représenter l'étiquette
-                var rectangle = new Rectangle
-                {
-                    Width = label.Width,
-                    Height = label.Height,
-                    Stroke = Brushes.Red,
-                    StrokeThickness = 1,
-                    Fill = Brushes.Transparent
-                };
-
-                // Positionner le rectangle
-                Canvas.SetLeft(rectangle, label.X);
-                Canvas.SetTop(rectangle, label.Y);
-                PreviewCanvas.Children.Add(rectangle);
 
                 // Ajouter une image si elle existe
                 if (label.Image != null)
@@ -97,56 +101,55 @@ namespace FabLab_Etiquette.Views
                     PreviewCanvas.Children.Add(image);
                 }
 
-                // Validation de la taille de la police
-                if (label.FontSize <= 0)
-                {
-                    label.FontSize = 1; // Définit une taille minimale de police
-                }
-
-                if (label.FontSize > label.Height / 2)
-                {
-                    label.FontSize = label.Height / 2; // Réduire la taille du texte pour qu'il reste visible
-                }
-
-
                 // Ajouter du texte
                 var textBlock = new TextBlock
                 {
                     Text = label.Text,
-                    Foreground = Brushes.Black,
                     FontSize = label.FontSize,
-                    TextAlignment = TextAlignment.Center,
-                    TextWrapping = TextWrapping.NoWrap, // Pas de retour à la ligne
-                    ClipToBounds = true // Le texte ne dépasse pas les limites
+                    Foreground = label.Action?.ToLower() == "gravure" ? Brushes.Black : Brushes.Red,
+                    TextWrapping = TextWrapping.Wrap, // Autoriser le retour à la ligne
+                    TextAlignment = TextAlignment.Center, // Centrer le texte horizontalement
+                    Width = label.Width - 10, // Laisser un espace intérieur
+                    Height = label.Height - 10 // Laisser un espace intérieur
                 };
 
-                if (label == null || string.IsNullOrWhiteSpace(label.Text))
+                if (string.IsNullOrWhiteSpace(label.Text))
                 {
-                    System.Diagnostics.Debug.WriteLine("Étiquette non valide ou sans texte.");
-                    continue; // Passez à l'étiquette suivante si elle est invalide
+                    System.Diagnostics.Debug.WriteLine($"Étiquette sans texte détectée et ignorée.");
+                    continue; // Passe à l'étiquette suivante
                 }
 
-                System.Diagnostics.Debug.WriteLine($"Dessiner l'étiquette : {label.Text} à la position ({label.X}, {label.Y})");
+                // Calculer la position du texte en fonction des alignements
+                double textX = label.X + 5; // Décalage pour éviter de coller au bord
+                double textY = label.Y + (label.Height - textBlock.Height) / 2;
 
-                // Calculer la position pour centrer le texte dans la case
+                // Vérifier si les dimensions du texte dépassent
                 textBlock.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-                double textWidth = textBlock.DesiredSize.Width;
-                double textHeight = textBlock.DesiredSize.Height;
+                if (textBlock.DesiredSize.Width > label.Width || textBlock.DesiredSize.Height > label.Height)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Texte '{label.Text}' trop grand pour l'étiquette.");
+                }
 
-                double textX = Math.Max(label.X, label.X + (label.Width - textWidth) / 2);
-                double textY = label.Y + (label.Height - textHeight) / 2;
-
+                // Positionnement final du texte
                 Canvas.SetLeft(textBlock, textX);
                 Canvas.SetTop(textBlock, textY);
 
-                // Ajouter une zone de découpe pour empêcher le texte de dépasser la case
+                // Ajouter une zone de découpe
                 var clipRectangle = new RectangleGeometry(new Rect(label.X, label.Y, label.Width, label.Height));
                 textBlock.Clip = clipRectangle;
 
                 PreviewCanvas.Children.Add(textBlock);
+
                 System.Diagnostics.Debug.WriteLine($"Ajouté au Canvas : {label.Text}");
             }
-            
         }
+
+
+
+
+
+
+
+
     }
 }

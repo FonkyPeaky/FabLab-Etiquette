@@ -9,6 +9,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Media.Imaging;
 using FabLab_Etiquette.Views;
 using System.Linq;
+using System.Windows.Media;
 
 namespace FabLab_Etiquette.ViewModels
 {
@@ -20,9 +21,26 @@ namespace FabLab_Etiquette.ViewModels
         public ICommand UpdateSelectedLabelCommand { get; }
         public ICommand RearrangeLabelsCommand { get; }
         public ICommand AlignLabelsCommand { get; }
+        public ICommand AddNewLineCommand { get; }
+        public ICommand ToggleGridCommand { get; }
         public ObservableCollection<LabelModel> Labels { get; } = new ObservableCollection<LabelModel>();
         public event PropertyChangedEventHandler PropertyChanged;
         private LabelModel _selectedLabel;
+        private bool _isGridVisible;
+
+        public bool IsGridVisible
+        {
+            get => _isGridVisible;
+            set
+            {
+                _isGridVisible = value;
+                OnPropertyChanged();
+
+                // Actualiser la prévisualisation
+                var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
+                view?.DrawLabels(); // Redessine avec ou sans grille
+            }
+        }
 
         public LabelModel SelectedLabel
         {
@@ -35,6 +53,15 @@ namespace FabLab_Etiquette.ViewModels
                 // Actualiser l'affichage lorsque l'étiquette sélectionnée change
                 var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
                 view?.DrawLabels();
+            }
+        }
+        private void AddNewLine()
+        {
+            
+            if (SelectedLabel != null)
+            {
+                SelectedLabel.Text += "\n"; // Ajouter un retour à la ligne
+                OnPropertyChanged(nameof(SelectedLabel)); // Notifie l'interface utilisateur
             }
         }
         private void Label_PropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -52,6 +79,11 @@ namespace FabLab_Etiquette.ViewModels
             RearrangeLabelsCommand = new RelayCommand(RearrangeLabels);
             AddImageCommand = new RelayCommand(AddImageToLabel);
             AlignLabelsCommand = new RelayCommand(AlignLabels);
+            AddNewLineCommand = new RelayCommand(AddNewLine);
+            ToggleGridCommand = new RelayCommand(() =>
+            {
+                IsGridVisible = !IsGridVisible; // Alterne l'état
+            });
 
             Labels.CollectionChanged += (s, e) =>
             {
@@ -75,6 +107,7 @@ namespace FabLab_Etiquette.ViewModels
                 var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
                 view?.DrawLabels();
             };
+
         }
         public void AddImageToLabel()
         {
@@ -128,6 +161,8 @@ namespace FabLab_Etiquette.ViewModels
                 label.X = currentX;
                 label.Y = currentY;
 
+                System.Diagnostics.Debug.WriteLine($"Positionnement : {label.Text} à ({label.X}, {label.Y})");
+
                 currentX += label.Width + step;
                 if (currentX + label.Width > maxWidth)
                 {
@@ -143,6 +178,7 @@ namespace FabLab_Etiquette.ViewModels
             }
         }
 
+
         private void UpdateSelectedLabel()
         {
             if (SelectedLabel != null)
@@ -154,44 +190,105 @@ namespace FabLab_Etiquette.ViewModels
 
         private void AddLabel()
         {
-            var newLabel = new LabelModel
+            // Récupérer les dimensions du Canvas à partir de la vue
+            var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
+            if (view == null || view.PreviewCanvas == null)
             {
-                X = 0, // Position initiale
-                Y = 0,
-                Width = 100,
-                Height = 50,
-                Text = "Nouvelle étiquette",
-                FontFamily = "Arial",
-                FontSize = 10
-            };
+                System.Windows.MessageBox.Show("Canvas introuvable. Vérifiez la configuration de la vue.");
+                return;
+            }
 
-            // Trouver une position libre
-            FindFreePosition(newLabel);
+            double canvasWidth = view.PreviewCanvas.ActualWidth; // Largeur réelle du Canvas
+            double canvasHeight = view.PreviewCanvas.ActualHeight; // Hauteur réelle du Canvas
 
+            if (canvasWidth == 0 || canvasHeight == 0)
+            {
+                // Dimensions non encore calculées
+                canvasWidth = 844; // Valeur par défaut
+                canvasHeight = 500; // Valeur par défaut
+            }
+
+            LabelModel newLabel;
+
+            // Si des étiquettes existent, copier les propriétés de la dernière étiquette
+            if (Labels.Count > 0)
+            {
+                var lastLabel = Labels.Last();
+                newLabel = new LabelModel
+                {
+                    X = lastLabel.X, // Même colonne que la dernière étiquette
+                    Y = lastLabel.Y + lastLabel.Height, // Position en dessous
+                    Width = lastLabel.Width,
+                    Height = lastLabel.Height,
+                    Text = lastLabel.Text,
+                    FontFamily = lastLabel.FontFamily,
+                    FontSize = lastLabel.FontSize,
+                    BackgroundColor = lastLabel.BackgroundColor,
+                    BorderColor = lastLabel.BorderColor,
+                    BorderThickness = lastLabel.BorderThickness,
+                    Shape = lastLabel.Shape
+                };
+
+                // Si la nouvelle étiquette dépasse la hauteur du Canvas, déplacer à une nouvelle colonne
+                if (newLabel.Y + newLabel.Height > canvasHeight)
+                {
+                    newLabel.Y = 0; // Revenir en haut
+                    newLabel.X += newLabel.Width; // Passer à la colonne suivante
+                }
+            }
+            else
+            {
+                // Valeurs par défaut si aucune étiquette n'existe
+                newLabel = new LabelModel
+                {
+                    X = 1,
+                    Y = 1,
+                    Width = 100,
+                    Height = 50,
+                    Text = "Nouvelle étiquette",
+                    FontFamily = "Arial",
+                    FontSize = 10,
+                    BackgroundColor = Brushes.White,
+                    BorderColor = Brushes.Red,
+                    BorderThickness = 2,
+                    Shape = "Rectangle"
+                };
+            }
+
+            // Vérification : si la nouvelle étiquette dépasse la largeur du Canvas, afficher un message
+            if (newLabel.X + newLabel.Width > canvasWidth)
+            {
+                System.Windows.MessageBox.Show("Impossible d'ajouter une nouvelle étiquette : espace insuffisant.");
+                return;
+            }
+
+            // Ajouter l'étiquette à la collection
             Labels.Add(newLabel);
             SelectedLabel = newLabel; // Sélectionner automatiquement la nouvelle étiquette
         }
 
+        public string _pdfPath = @"C:\Temp\Etiquettes.pdf"; // Chemin du fichier PDF
 
-
-        private void GeneratePdf()
+        public void GeneratePdf()
         {
-
-            System.Diagnostics.Debug.WriteLine("test 1");
             if (Labels.Count == 0)
             {
-                System.Diagnostics.Debug.WriteLine("test 2");
                 System.Windows.MessageBox.Show("Aucune étiquette à générer !");
                 return;
             }
-            System.Diagnostics.Debug.WriteLine("test 3");
-            string outputPath = @"C:\Temp\Etiquettes.pdf"; // Chemin temporaire
-            PdfService.CreateLabelsPdf(Labels, outputPath);
-            System.Windows.MessageBox.Show($"PDF généré avec succès à : {outputPath}");
-            System.Diagnostics.Debug.WriteLine("test 4");
+
+            // Générer le PDF
+            PdfService.CreateLabelsPdf(Labels, _pdfPath);
+
+            // Notifier l'interface utilisateur
+            var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
+            view?.UpdatePdfPreview(_pdfPath);
+
+            System.Windows.MessageBox.Show($"PDF généré avec succès à : {_pdfPath}");
         }
 
-        
+
+
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
