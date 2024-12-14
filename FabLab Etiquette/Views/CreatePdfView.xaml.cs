@@ -51,7 +51,7 @@ namespace FabLab_Etiquette.Views
 
             // Récupérer le ViewModel
             var viewModel = DataContext as CreatePdfViewModel;
-            if (viewModel == null) return;
+            if (viewModel == null || viewModel.Labels == null) return;
 
             foreach (var label in viewModel.Labels)
             {
@@ -78,7 +78,7 @@ namespace FabLab_Etiquette.Views
                 {
                     Width = label.Width,
                     Height = label.Height,
-                    Stroke = Brushes.Red, // Bordure toujours rouge pour découpe
+                    Stroke = Brushes.Red, // Bordure rouge pour découpe
                     StrokeThickness = label.BorderThickness,
                     Fill = Brushes.Transparent
                 };
@@ -106,11 +106,12 @@ namespace FabLab_Etiquette.Views
                 {
                     Text = label.Text,
                     FontSize = label.FontSize,
-                    Foreground = label.Action?.ToLower() == "gravure" ? Brushes.Black : Brushes.Red,
+                    Foreground = label.Action?.ToLower() == "gravure" ? Brushes.Black : Brushes.Black,
                     TextWrapping = TextWrapping.Wrap, // Autoriser le retour à la ligne
-                    TextAlignment = TextAlignment.Center, // Centrer le texte horizontalement
-                    Width = label.Width - 10, // Laisser un espace intérieur
-                    Height = label.Height - 10 // Laisser un espace intérieur
+                    Width = label.Width,
+                    Height = label.Height,
+                    TextAlignment = TextAlignment.Center, // Alignement horizontal
+                    VerticalAlignment = VerticalAlignment.Center // Alignement vertical
                 };
 
                 if (string.IsNullOrWhiteSpace(label.Text))
@@ -119,30 +120,51 @@ namespace FabLab_Etiquette.Views
                     continue; // Passe à l'étiquette suivante
                 }
 
-                // Calculer la position du texte en fonction des alignements
-                double textX = label.X + 5; // Décalage pour éviter de coller au bord
-                double textY = label.Y + (label.Height - textBlock.Height) / 2;
+                // Calculer la position en fonction de l'alignement
+                double textX = label.X;
+                double textY = label.Y;
 
-                // Vérifier si les dimensions du texte dépassent
-                textBlock.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
-                if (textBlock.DesiredSize.Width > label.Width || textBlock.DesiredSize.Height > label.Height)
+                switch (label.HorizontalAlignment?.ToLower())
                 {
-                    System.Diagnostics.Debug.WriteLine($"Texte '{label.Text}' trop grand pour l'étiquette.");
+                    case "gauche":
+                        textBlock.TextAlignment = TextAlignment.Left;
+                        break;
+                    case "droite":
+                        textBlock.TextAlignment = TextAlignment.Right;
+                        break;
+                    default:
+                        textBlock.TextAlignment = TextAlignment.Center;
+                        break;
                 }
 
-                // Positionnement final du texte
+                // Ajustement vertical
+                switch (label.VerticalAlignment?.ToLower())
+                {
+                    case "haut":
+                        textY = label.Y;
+                        break;
+                    case "bas":
+                        textY = label.Y + label.Height - textBlock.FontSize;
+                        break;
+                    default:
+                        textY = label.Y + (label.Height - textBlock.FontSize) / 2; // Centré
+                        break;
+                }
+
                 Canvas.SetLeft(textBlock, textX);
                 Canvas.SetTop(textBlock, textY);
 
-                // Ajouter une zone de découpe
-                var clipRectangle = new RectangleGeometry(new Rect(label.X, label.Y, label.Width, label.Height));
+                // Zone de découpe pour ne pas dépasser les limites de l'étiquette
+                var clipRectangle = new RectangleGeometry(new Rect(0, 0, label.Width, label.Height));
                 textBlock.Clip = clipRectangle;
 
                 PreviewCanvas.Children.Add(textBlock);
 
-                System.Diagnostics.Debug.WriteLine($"Ajouté au Canvas : {label.Text}");
+                System.Diagnostics.Debug.WriteLine($"Ajouté au Canvas : {label.Text} à ({textX}, {textY})");
             }
         }
+
+
 
 
 

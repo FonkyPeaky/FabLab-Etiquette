@@ -32,20 +32,20 @@ namespace FabLab_Etiquette.Models
         public string Action { get; set; } = "Découpe"; // Par défaut, une étiquette sera en "Découpe".
 
 
-        public LabelModel()
-        {
-            ActionType = "Découpe"; // Par défaut
-        }
+         public LabelModel()
+         {
+             ActionType = "Découpe"; // Par défaut
+         }
 
-        public string ActionType
-        {
-            get => _actionType;
-            set
-            {
-                _actionType = value;
-                OnPropertyChanged();
-            }
-        }
+         public string ActionType
+         {
+             get => _actionType;
+             set
+             {
+                 _actionType = value;
+                 OnPropertyChanged();
+             }
+         }
         public string Shape
         {
             get => _shape;

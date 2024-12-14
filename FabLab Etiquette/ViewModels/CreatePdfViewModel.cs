@@ -23,10 +23,23 @@ namespace FabLab_Etiquette.ViewModels
         public ICommand AlignLabelsCommand { get; }
         public ICommand AddNewLineCommand { get; }
         public ICommand ToggleGridCommand { get; }
+        public ICommand TogglePreviewCommand { get; }
         public ObservableCollection<LabelModel> Labels { get; } = new ObservableCollection<LabelModel>();
         public event PropertyChangedEventHandler PropertyChanged;
         private LabelModel _selectedLabel;
         private bool _isGridVisible;
+        private bool _isPreviewVisible = true;
+
+        public bool IsPreviewVisible
+        {
+            get => _isPreviewVisible;
+            set
+            {
+                _isPreviewVisible = value;
+                OnPropertyChanged();
+            }
+        }
+
 
         public bool IsGridVisible
         {
@@ -70,6 +83,12 @@ namespace FabLab_Etiquette.ViewModels
             var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
             view?.DrawLabels();
         }
+
+        private void TogglePreview()
+        {
+            IsPreviewVisible = !IsPreviewVisible;
+        }
+
         public CreatePdfViewModel()
         {
             Labels = new ObservableCollection<LabelModel>();
@@ -80,9 +99,14 @@ namespace FabLab_Etiquette.ViewModels
             AddImageCommand = new RelayCommand(AddImageToLabel);
             AlignLabelsCommand = new RelayCommand(AlignLabels);
             AddNewLineCommand = new RelayCommand(AddNewLine);
+            TogglePreviewCommand = new RelayCommand(TogglePreview);
             ToggleGridCommand = new RelayCommand(() =>
             {
                 IsGridVisible = !IsGridVisible; // Alterne l'état
+            });
+            TogglePreviewCommand = new RelayCommand(() =>
+            {
+                IsPreviewVisible = !IsPreviewVisible; // Change l'état de visibilité
             });
 
             Labels.CollectionChanged += (s, e) =>

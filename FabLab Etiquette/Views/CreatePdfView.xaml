@@ -2,6 +2,11 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Créer des Étiquettes PDF" Height="1000" Width="1500">
+
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Window.Resources>
+    
     <Grid>
         <!-- Définition des colonnes -->
         <Grid.ColumnDefinitions>
@@ -131,12 +136,17 @@
                     Command="{Binding AlignLabelsCommand}"
                     Width="200"
                     Margin="0,10,0,0" />
+            <Button Content="Afficher/Masquer la Prévisualisation PDF"
+                    Command="{Binding TogglePreviewCommand}"
+                    Width="250"
+                    Margin="0,10,0,0"/>
         </StackPanel>
 
         <!-- Canvas pour prévisualisation des étiquettes (colonne 1) -->
         <Canvas x:Name="PreviewCanvas"
                 Grid.Column="1"
                 Background="LightGray"
+                Grid.ColumnSpan="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Collapsed}"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 Margin="10" />
@@ -146,6 +156,7 @@
                     Grid.Column="2"
                     HorizontalAlignment="Stretch"
                     VerticalAlignment="Stretch"
-                    Margin="10" />
+                    Margin="10"
+                    Visibility="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
     </Grid>
 </Window>
