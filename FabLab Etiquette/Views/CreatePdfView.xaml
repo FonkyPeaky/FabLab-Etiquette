@@ -1,36 +1,31 @@
 ﻿<Window x:Class="FabLab_Etiquette.Views.CreatePdfView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Créer des Étiquettes PDF" Height="1000" Width="1500">
+        Title="Créer des Étiquettes PDF" Height="860" Width="1600">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Window.Resources>
-    
-    <Grid>
+
+    <Grid Margin="0,0,0,-16">
         <!-- Définition des colonnes -->
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*" />
+            <ColumnDefinition Width="258*" />
+            <ColumnDefinition/>
             <!-- Formulaire -->
-            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="666*" />
             <!-- Prévisualisation Canvas -->
-            <ColumnDefinition Width="3*" />
-            <!-- Prévisualisation PDF -->
         </Grid.ColumnDefinitions>
 
         <!-- Formulaire et liste des étiquettes (colonne 0) -->
-        <StackPanel Grid.Column="0" Margin="10">
+        <StackPanel Margin="0,10,0,0" HorizontalAlignment="Center" Width="430">
             <!-- Bouton pour ajouter une nouvelle étiquette -->
-            <Button Content="Ajouter une étiquette"
-                    Command="{Binding AddLabelCommand}"
-                    Width="200"
-                    Margin="0,0,0,10" />
 
             <!-- Liste des étiquettes existantes -->
             <ListBox ItemsSource="{Binding Labels}"
                      SelectedItem="{Binding SelectedLabel, Mode=TwoWay}"
                      Margin="0,0,0,10"
-                     Height="200">
+                     Height="116">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
@@ -118,6 +113,10 @@
                     </x:Array>
                 </ComboBox.ItemsSource>
             </ComboBox>
+            <Button Content="Ajouter une étiquette"
+                    Command="{Binding AddLabelCommand}"
+                    Width="200"
+                    />
 
             <!-- Boutons -->
             <Button Content="Réorganiser les étiquettes"
@@ -136,27 +135,26 @@
                     Command="{Binding AlignLabelsCommand}"
                     Width="200"
                     Margin="0,10,0,0" />
-            <Button Content="Afficher/Masquer la Prévisualisation PDF"
-                    Command="{Binding TogglePreviewCommand}"
-                    Width="250"
-                    Margin="0,10,0,0"/>
+            <Button Content="Paramètres PDF"
+                    Click="OpenPdfSettingsWindow"
+                    Width="200"
+                    Margin="0,10,0,0" />
         </StackPanel>
 
         <!-- Canvas pour prévisualisation des étiquettes (colonne 1) -->
         <Canvas x:Name="PreviewCanvas"
-                Grid.Column="1"
+                Grid.Column="2"
                 Background="LightGray"
-                Grid.ColumnSpan="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}, ConverterParameter=Collapsed}"
-                HorizontalAlignment="Stretch"
-                VerticalAlignment="Stretch"
-                Margin="10" />
-
-        <!-- Zone pour l'aperçu PDF (colonne 2) -->
-        <WebBrowser x:Name="PdfPreview"
-                    Grid.Column="2"
-                    HorizontalAlignment="Stretch"
-                    VerticalAlignment="Stretch"
-                    Margin="10"
-                    Visibility="{Binding IsPreviewVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                Width="1110" 
+                Height="619"  
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                ClipToBounds="True"
+                RenderTransformOrigin="0.5,0.5" Margin="0,112,0,0">
+            <Canvas.RenderTransform>
+                <ScaleTransform ScaleX="1" ScaleY="1" />
+                <!-- Échelle initiale -->
+            </Canvas.RenderTransform>
+        </Canvas>
     </Grid>
 </Window>

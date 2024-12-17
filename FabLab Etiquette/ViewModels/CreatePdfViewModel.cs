@@ -1,15 +1,17 @@
 ﻿using FabLab_Etiquette.Helpers;
-using FabLab_Etiquette.Services;
-using Microsoft.Win32;
-using System.Windows.Input;
 using FabLab_Etiquette.Models;
+using FabLab_Etiquette.Services;
+using FabLab_Etiquette.Views;
+using Microsoft.Win32;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows.Media.Imaging;
-using FabLab_Etiquette.Views;
-using System.Linq;
+using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace FabLab_Etiquette.ViewModels
 {
@@ -17,28 +19,16 @@ namespace FabLab_Etiquette.ViewModels
     {
         public ICommand AddLabelCommand { get; }
         public ICommand GeneratePdfCommand { get; }
-        public ICommand AddImageCommand { get; }   
+        public ICommand AddImageCommand { get; }
         public ICommand UpdateSelectedLabelCommand { get; }
         public ICommand RearrangeLabelsCommand { get; }
         public ICommand AlignLabelsCommand { get; }
         public ICommand AddNewLineCommand { get; }
         public ICommand ToggleGridCommand { get; }
-        public ICommand TogglePreviewCommand { get; }
         public ObservableCollection<LabelModel> Labels { get; } = new ObservableCollection<LabelModel>();
         public event PropertyChangedEventHandler PropertyChanged;
         private LabelModel _selectedLabel;
         private bool _isGridVisible;
-        private bool _isPreviewVisible = true;
-
-        public bool IsPreviewVisible
-        {
-            get => _isPreviewVisible;
-            set
-            {
-                _isPreviewVisible = value;
-                OnPropertyChanged();
-            }
-        }
 
 
         public bool IsGridVisible
@@ -70,7 +60,7 @@ namespace FabLab_Etiquette.ViewModels
         }
         private void AddNewLine()
         {
-            
+
             if (SelectedLabel != null)
             {
                 SelectedLabel.Text += "\n"; // Ajouter un retour à la ligne
@@ -84,10 +74,6 @@ namespace FabLab_Etiquette.ViewModels
             view?.DrawLabels();
         }
 
-        private void TogglePreview()
-        {
-            IsPreviewVisible = !IsPreviewVisible;
-        }
 
         public CreatePdfViewModel()
         {
@@ -99,15 +85,11 @@ namespace FabLab_Etiquette.ViewModels
             AddImageCommand = new RelayCommand(AddImageToLabel);
             AlignLabelsCommand = new RelayCommand(AlignLabels);
             AddNewLineCommand = new RelayCommand(AddNewLine);
-            TogglePreviewCommand = new RelayCommand(TogglePreview);
             ToggleGridCommand = new RelayCommand(() =>
             {
                 IsGridVisible = !IsGridVisible; // Alterne l'état
             });
-            TogglePreviewCommand = new RelayCommand(() =>
-            {
-                IsPreviewVisible = !IsPreviewVisible; // Change l'état de visibilité
-            });
+
 
             Labels.CollectionChanged += (s, e) =>
             {
@@ -214,27 +196,14 @@ namespace FabLab_Etiquette.ViewModels
 
         private void AddLabel()
         {
-            // Récupérer les dimensions du Canvas à partir de la vue
-            var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
-            if (view == null || view.PreviewCanvas == null)
-            {
-                System.Windows.MessageBox.Show("Canvas introuvable. Vérifiez la configuration de la vue.");
-                return;
-            }
-
-            double canvasWidth = view.PreviewCanvas.ActualWidth; // Largeur réelle du Canvas
-            double canvasHeight = view.PreviewCanvas.ActualHeight; // Hauteur réelle du Canvas
-
-            if (canvasWidth == 0 || canvasHeight == 0)
-            {
-                // Dimensions non encore calculées
-                canvasWidth = 844; // Valeur par défaut
-                canvasHeight = 500; // Valeur par défaut
-            }
+            const double scaleFactor = 1.5; // Facteur d'échelle pour la prévisualisation
+            const double canvasWidth = 1110; // Largeur visible à l'écran
+            const double canvasHeight = 619; // Hauteur visible à l'écran
+            const double realWidth = canvasWidth * scaleFactor; // Largeur réelle
+            const double realHeight = canvasHeight * scaleFactor; // Hauteur réelle
 
             LabelModel newLabel;
 
-            // Si des étiquettes existent, copier les propriétés de la dernière étiquette
             if (Labels.Count > 0)
             {
                 var lastLabel = Labels.Last();
@@ -253,20 +222,26 @@ namespace FabLab_Etiquette.ViewModels
                     Shape = lastLabel.Shape
                 };
 
-                // Si la nouvelle étiquette dépasse la hauteur du Canvas, déplacer à une nouvelle colonne
-                if (newLabel.Y + newLabel.Height > canvasHeight)
+                // Détection des dépassements en coordonnées réelles
+                if (newLabel.Y + newLabel.Height > realHeight)
                 {
-                    newLabel.Y = 0; // Revenir en haut
-                    newLabel.X += newLabel.Width; // Passer à la colonne suivante
+                    newLabel.Y = 0;
+                    newLabel.X += newLabel.Width;
+                }
+
+                if (newLabel.X + newLabel.Width > realWidth)
+                {
+                    MessageBox.Show("Impossible d'ajouter plus d'étiquettes : dépassement des limites du PDF.");
+                    return;
                 }
             }
             else
             {
-                // Valeurs par défaut si aucune étiquette n'existe
+                // Valeurs par défaut pour la première étiquette
                 newLabel = new LabelModel
                 {
-                    X = 1,
-                    Y = 1,
+                    X = 0,
+                    Y = 0,
                     Width = 100,
                     Height = 50,
                     Text = "Nouvelle étiquette",
@@ -279,22 +254,47 @@ namespace FabLab_Etiquette.ViewModels
                 };
             }
 
-            // Vérification : si la nouvelle étiquette dépasse la largeur du Canvas, afficher un message
-            if (newLabel.X + newLabel.Width > canvasWidth)
-            {
-                System.Windows.MessageBox.Show("Impossible d'ajouter une nouvelle étiquette : espace insuffisant.");
-                return;
-            }
-
-            // Ajouter l'étiquette à la collection
+            // Ajouter l'étiquette
             Labels.Add(newLabel);
-            SelectedLabel = newLabel; // Sélectionner automatiquement la nouvelle étiquette
+            SelectedLabel = newLabel;
+
+            // Mettre à jour l'affichage
+            var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
+            view?.DrawLabels();
         }
+
 
         public string _pdfPath = @"C:\Temp\Etiquettes.pdf"; // Chemin du fichier PDF
 
         public void GeneratePdf()
         {
+            var document = new PdfDocument();
+            var page = document.AddPage();
+            var gfx = XGraphics.FromPdfPage(page);
+
+            var pen = new XPen(XColors.Red, 2);
+            gfx.DrawRectangle(pen, XBrushes.Transparent, 50, 50, 100, 50);
+
+            var Labels = new List<LabelModel>
+            {
+                new LabelModel
+                {
+                    X = 10,
+                    Y = 20,
+                    Width = 100,
+                    Height = 50,
+                    Shape = "Rectangle",
+                    Text = "Exemple",
+                    Action = "Gravure",
+                    FontFamily = "Arial",
+                    FontSize = 12,
+                    BorderThickness = 1
+                }
+            };
+
+            string fileName = $"Etiquette_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            string outputPath = System.IO.Path.Combine(@"C:\Temp\", fileName);
+
             if (Labels.Count == 0)
             {
                 System.Windows.MessageBox.Show("Aucune étiquette à générer !");
@@ -306,9 +306,9 @@ namespace FabLab_Etiquette.ViewModels
 
             // Notifier l'interface utilisateur
             var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
-            view?.UpdatePdfPreview(_pdfPath);
 
-            System.Windows.MessageBox.Show($"PDF généré avec succès à : {_pdfPath}");
+            MessageBox.Show($"PDF généré avec succès : {outputPath}",
+                            "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
 
@@ -336,26 +336,28 @@ namespace FabLab_Etiquette.ViewModels
         }
         private void FindFreePosition(LabelModel newLabel)
         {
-            const double step = 1; // Pas pour décaler les étiquettes
-            double maxWidth = 844; // Largeur maximale du plateau
-            double maxHeight = 500; // Hauteur maximale du plateau
+            const double step = 1;
+            double maxWidth = 1701; // Taille PDF en points (600 mm)
+            double maxHeight = 850; // Taille PDF en points (300 mm)
 
             while (IsOverlapping(newLabel))
             {
-                newLabel.X += step;
-                if (newLabel.X + newLabel.Width > maxWidth) // Si on dépasse la largeur, passer à une nouvelle ligne
+                newLabel.Y += step; // Descendre à la prochaine ligne
+
+                if (newLabel.Y + newLabel.Height > maxHeight)
                 {
-                    newLabel.X = 0;
-                    newLabel.Y += step;
+                    newLabel.Y = 0;
+                    newLabel.X += newLabel.Width + step; // Déplacer vers la droite
                 }
 
-                if (newLabel.Y + newLabel.Height > maxHeight) // Si on dépasse la hauteur
+                if (newLabel.X + newLabel.Width > maxWidth)
                 {
-                    System.Windows.MessageBox.Show("Impossible de placer l'étiquette : espace insuffisant. Réorganisez vos étiquettes.");
+                    System.Windows.MessageBox.Show("Impossible d'ajouter plus d'étiquettes : espace insuffisant.");
                     break;
                 }
             }
         }
+
 
         private void AlignLabels()
         {
