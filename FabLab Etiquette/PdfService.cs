@@ -2,8 +2,6 @@
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using System.Collections.ObjectModel;
-using System.Collections.Generic;
-using FabLab_Etiquette.Services;
 
 
 namespace FabLab_Etiquette.Services

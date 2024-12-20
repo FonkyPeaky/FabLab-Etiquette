@@ -1,6 +1,5 @@
 ﻿using FabLab_Etiquette.Helpers;
 using FabLab_Etiquette.Views;
-using System.Windows;
 using System.Windows.Input;
 
 namespace FabLab_Etiquette.ViewModels

@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows.Input;
-using System.Windows.Media.Imaging;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace FabLab_Etiquette.Models
 {
@@ -32,20 +26,20 @@ namespace FabLab_Etiquette.Models
         public string Action { get; set; } = "Découpe"; // Par défaut, une étiquette sera en "Découpe".
 
 
-         public LabelModel()
-         {
-             ActionType = "Découpe"; // Par défaut
-         }
+        public LabelModel()
+        {
+            ActionType = "Découpe"; // Par défaut
+        }
 
-         public string ActionType
-         {
-             get => _actionType;
-             set
-             {
-                 _actionType = value;
-                 OnPropertyChanged();
-             }
-         }
+        public string ActionType
+        {
+            get => _actionType;
+            set
+            {
+                _actionType = value;
+                OnPropertyChanged();
+            }
+        }
         public string Shape
         {
             get => _shape;
@@ -102,13 +96,13 @@ namespace FabLab_Etiquette.Models
             get => _y;
             set { _y = value; OnPropertyChanged(); }
         }
-        
+
         public double Width
         {
             get => _width;
             set { _width = value; OnPropertyChanged(); }
         }
-       
+
         public double Height
         {
             get => _height;

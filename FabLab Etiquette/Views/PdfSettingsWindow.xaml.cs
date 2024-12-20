@@ -1,16 +1,12 @@
 ﻿using FabLab_Etiquette.Helpers;
+using FabLab_Etiquette.Models;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
-using PdfSharp.Pdf;
-using PdfSharp.Drawing;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Collections.Generic;
-using FabLab_Etiquette.Models;
-using FabLab_Etiquette;
-using System.Collections.Generic;
 
 
 namespace FabLab_Etiquette.ViewModels
@@ -77,7 +73,7 @@ namespace FabLab_Etiquette.ViewModels
 
         public void GeneratePdf()
         {
- 
+
             if (string.IsNullOrWhiteSpace(PdfName) ||
                 string.IsNullOrWhiteSpace(PdfNumber) ||
                 string.IsNullOrWhiteSpace(PdfTitle))
@@ -100,7 +96,7 @@ namespace FabLab_Etiquette.ViewModels
 
             MessageBox.Show($"PDF généré avec succès : {outputPath}",
                             "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
-            
+
         }
 
 

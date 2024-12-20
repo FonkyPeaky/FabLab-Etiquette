@@ -290,7 +290,7 @@ namespace FabLab_Etiquette.ViewModels
             };
 
             string fileName = $"Etiquette_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-            string outputPath = System.IO.Path.Combine(@"C:\Temp\", fileName);
+            string outputPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
 
             if (Labels.Count == 0)
             {
