@@ -1,4 +1,6 @@
 ﻿using FabLab_Etiquette.ViewModels;
+using PdfSharp.Snippets;
+using System.Reflection.Emit;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;

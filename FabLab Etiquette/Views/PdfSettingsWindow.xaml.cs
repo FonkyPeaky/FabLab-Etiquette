@@ -9,7 +9,9 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Collections.Generic;
 using FabLab_Etiquette.Models;
-using FabLab_Etiquette.Services;
+using FabLab_Etiquette;
+using System.Collections.Generic;
+
 
 namespace FabLab_Etiquette.ViewModels
 {
@@ -17,7 +19,6 @@ namespace FabLab_Etiquette.ViewModels
     {
         public event PropertyChangedEventHandler PropertyChanged;
         public ObservableCollection<LabelModel> Labels { get; set; } = new ObservableCollection<LabelModel>();
-
 
         // Champs fixes
         public string PdfColor { get; } = "Noir/Rouge";
@@ -55,8 +56,28 @@ namespace FabLab_Etiquette.ViewModels
             GeneratePdfCommand = new RelayCommand(GeneratePdf);
         }
 
+        public static void CreateLabelsPdf(List<LabelModel> labels, string outputPath)
+        {
+            PdfDocument document = new PdfDocument();
+            PdfPage page = document.AddPage();
+            XGraphics gfx = XGraphics.FromPdfPage(page);
+
+            foreach (var label in labels)
+            {
+                var pen = new XPen(XColors.Red, label.BorderThickness);
+                var font = new XFont(label.FontFamily, label.FontSize);
+                var rect = new XRect(label.X, label.Y, label.Width, label.Height);
+
+                gfx.DrawRectangle(pen, XBrushes.Transparent, rect);
+                gfx.DrawString(label.Text, font, XBrushes.Black, rect, XStringFormats.Center);
+            }
+
+            document.Save(outputPath);
+        }
+
         public void GeneratePdf()
         {
+ 
             if (string.IsNullOrWhiteSpace(PdfName) ||
                 string.IsNullOrWhiteSpace(PdfNumber) ||
                 string.IsNullOrWhiteSpace(PdfTitle))
@@ -75,10 +96,11 @@ namespace FabLab_Etiquette.ViewModels
 
 
             // Appel au service PDF
-            PdfService.CreateLabelsPdf(Labels, outputPath);
+            FabLab_Etiquette.Services.PdfService.CreateLabelsPdf(Labels, outputPath);
 
             MessageBox.Show($"PDF généré avec succès : {outputPath}",
                             "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+            
         }
 
 

@@ -16,7 +16,6 @@ using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 using PdfSharp.Pdf;
 using System.IO.Packaging;
-using FabLab_Etiquette.Services;
 
 
 namespace FabLab_Etiquette.Views
@@ -142,7 +141,7 @@ namespace FabLab_Etiquette.Views
                 PreviewCanvas.Children.Add(textBlock);
 
                 // --- Dessin dans le PDF ---
-                var gfx = PdfService.GetGraphics();
+                var gfx = FabLab_Etiquette.Services.PdfService.GetGraphics();
 
                 // Conversion des unités de pixels en points (1 pixel = 0.75 point)
                 double unitConversion = 0.75;

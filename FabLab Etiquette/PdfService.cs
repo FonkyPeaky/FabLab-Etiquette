@@ -2,11 +2,13 @@
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using FabLab_Etiquette.Services;
 
 
 namespace FabLab_Etiquette.Services
 {
-    public static class PdfService
+    public class PdfService
     {
         public static PdfDocument _document = new PdfDocument();
         public static PdfPage _currentPage;
@@ -59,7 +61,7 @@ namespace FabLab_Etiquette.Services
             _currentPage = null;
         }
 
-        public static void CreateLabelsPdf(IEnumerable<LabelModel> labels, string outputPath)
+        public static void CreateLabelsPdf(ObservableCollection<LabelModel> labels, string outputPath)
         {
             var document = new PdfDocument();
             var page = document.AddPage();
@@ -67,50 +69,35 @@ namespace FabLab_Etiquette.Services
 
             foreach (var label in labels)
             {
-                // Conversion des positions et dimensions (unités PDF)
-                double unitConversion = 0.75; // Ajustement pour les unités du PDF
-                double pdfX = label.X * unitConversion;
-                double pdfY = label.Y * unitConversion;
-                double pdfWidth = label.Width * unitConversion;
-                double pdfHeight = label.Height * unitConversion;
-
-                var pen = new XPen(XColors.Red, label.BorderThickness);
+                var pen = new XPen(XColors.Red, label.BorderThickness); // Bordure rouge
                 var brush = XBrushes.White; // Fond blanc
-                var font = new XFont(label.FontFamily, label.FontSize);
-                var textBrush = XBrushes.Black;
 
-                // Dessiner les formes en fonction de Shape
+                // Dessin des formes
                 switch (label.Shape)
                 {
                     case "Rectangle":
-                        gfx.DrawRectangle(pen, brush, pdfX, pdfY, pdfWidth, pdfHeight);
+                        gfx.DrawRectangle(pen, brush, XUnit.FromPoint(label.X), XUnit.FromPoint(label.Y), XUnit.FromPoint(label.Width), XUnit.FromPoint(label.Height));
                         break;
 
                     case "Ellipse":
-                        gfx.DrawEllipse(pen, brush, pdfX, pdfY, pdfWidth, pdfHeight);
+                        gfx.DrawEllipse(pen, brush, XUnit.FromPoint(label.X), XUnit.FromPoint(label.Y), XUnit.FromPoint(label.Width), XUnit.FromPoint(label.Height));
                         break;
 
                     case "Losange":
-                        var points = new[]
+                        var points = new XPoint[]
                         {
-                        new XPoint(pdfX + pdfWidth / 2, pdfY),
-                        new XPoint(pdfX + pdfWidth, pdfY + pdfHeight / 2),
-                        new XPoint(pdfX + pdfWidth / 2, pdfY + pdfHeight),
-                        new XPoint(pdfX, pdfY + pdfHeight / 2)
-                    };
+                        new XPoint(label.X + label.Width / 2, label.Y),
+                        new XPoint(label.X + label.Width, label.Y + label.Height / 2),
+                        new XPoint(label.X + label.Width / 2, label.Y + label.Height),
+                        new XPoint(label.X, label.Y + label.Height / 2)
+                        };
                         gfx.DrawPolygon(pen, brush, points, XFillMode.Winding);
                         break;
                 }
 
-                // Ajouter le texte centré
-                var layoutRect = new XRect(pdfX, pdfY, pdfWidth, pdfHeight);
-                var format = new XStringFormat
-                {
-                    Alignment = XStringAlignment.Center,
-                    LineAlignment = XLineAlignment.Center
-                };
-
-                gfx.DrawString(label.Text, font, textBrush, layoutRect, format);
+                // Dessiner le texte
+                var font = new XFont("Arial", label.FontSize);
+                gfx.DrawString(label.Text, font, XBrushes.Black, new XRect(XUnit.FromPoint(label.X), XUnit.FromPoint(label.Y), XUnit.FromPoint(label.Width), XUnit.FromPoint(label.Height)), XStringFormats.Center);
             }
 
             // Sauvegarder le PDF

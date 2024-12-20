@@ -10,5 +10,6 @@
             <Button Content="Créer une étiquette PDF" Command="{Binding CreatePdfCommand}" Width="250" Height="50" />
             <Button Content="Standardiser un fichier PDF" Command="{Binding StandardizePdfCommand}" Width="250" Height="50" />
         </StackPanel>
+        <Label Content="FabLab Etiquette V.1 -- Merci de lire le PDF dans le dossier source." HorizontalAlignment="Center" Margin="0,69,0,0" VerticalAlignment="Top" Height="35" Width="362"/>
     </Grid>
 </Window>

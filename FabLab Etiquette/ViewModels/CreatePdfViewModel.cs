@@ -1,6 +1,5 @@
 ﻿using FabLab_Etiquette.Helpers;
 using FabLab_Etiquette.Models;
-using FabLab_Etiquette.Services;
 using FabLab_Etiquette.Views;
 using Microsoft.Win32;
 using PdfSharp.Drawing;
@@ -29,6 +28,7 @@ namespace FabLab_Etiquette.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
         private LabelModel _selectedLabel;
         private bool _isGridVisible;
+        public string _pdfPath = @"C:\Temp\Etiquettes.pdf"; // Chemin du fichier PDF
 
 
         public bool IsGridVisible
@@ -263,9 +263,6 @@ namespace FabLab_Etiquette.ViewModels
             view?.DrawLabels();
         }
 
-
-        public string _pdfPath = @"C:\Temp\Etiquettes.pdf"; // Chemin du fichier PDF
-
         public void GeneratePdf()
         {
             var document = new PdfDocument();
@@ -301,8 +298,10 @@ namespace FabLab_Etiquette.ViewModels
                 return;
             }
 
+            var observableLabels = new ObservableCollection<LabelModel>(Labels);
+
             // Générer le PDF
-            PdfService.CreateLabelsPdf(Labels, _pdfPath);
+            //FabLab_Etiquette.Services.PdfService.CreateLabelsPdf(Labels, _pdfPath);
 
             // Notifier l'interface utilisateur
             var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
@@ -310,8 +309,6 @@ namespace FabLab_Etiquette.ViewModels
             MessageBox.Show($"PDF généré avec succès : {outputPath}",
                             "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
         }
-
-
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
