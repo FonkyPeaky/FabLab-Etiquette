@@ -7,129 +7,90 @@ namespace FabLab_Etiquette.Models
 {
     public class LabelModel : INotifyPropertyChanged
     {
-        private double _x;
-        private double _y;
-        private BitmapImage _image;
+
+
         public event PropertyChangedEventHandler PropertyChanged;
-        private string _fontFamily = "Arial"; // Défaut : Arial
-        private double _fontSize = 20; // Défaut : 20
-        private double _width;
-        private double _height;
-        private string _text;
-        private Brush _backgroundColor = Brushes.White; // Couleur par défaut
-        private Brush _borderColor = Brushes.Red;
-        private double _borderThickness = 2; // Épaisseur par défaut
-        private string _shape = "Rectangle"; // Forme par défaut : Rectangle
-        private string _actionType;
-        public string HorizontalAlignment { get; set; } = "Centre"; // Par défaut centré
-        public string VerticalAlignment { get; set; } = "Milieu"; // Par défaut au milieu
-        public string Action { get; set; } = "Découpe"; // Par défaut, une étiquette sera en "Découpe".
-
-
-        public LabelModel()
-        {
-            ActionType = "Découpe"; // Par défaut
-        }
-
-        public string ActionType
-        {
-            get => _actionType;
-            set
-            {
-                _actionType = value;
-                OnPropertyChanged();
-            }
-        }
-        public string Shape
-        {
-            get => _shape;
-            set
-            {
-                _shape = value;
-                OnPropertyChanged();
-            }
-        }
-        public BitmapImage Image
-        {
-            get => _image;
-            set
-            {
-                _image = value;
-                OnPropertyChanged();
-            }
-        }
-        public double BorderThickness
-        {
-            get => _borderThickness;
-            set
-            {
-                _borderThickness = value;
-                OnPropertyChanged();
-            }
-        }
-        public Brush BorderColor
-        {
-            get => _borderColor;
-            set
-            {
-                _borderColor = value;
-                OnPropertyChanged();
-            }
-        }
-        public Brush BackgroundColor
-        {
-            get => _backgroundColor;
-            set
-            {
-                _backgroundColor = value;
-                OnPropertyChanged();
-            }
-        }
-        public double X
-        {
-            get => _x;
-            set { _x = value; OnPropertyChanged(); }
-        }
-
-        public double Y
-        {
-            get => _y;
-            set { _y = value; OnPropertyChanged(); }
-        }
-
-        public double Width
-        {
-            get => _width;
-            set { _width = value; OnPropertyChanged(); }
-        }
-
-        public double Height
-        {
-            get => _height;
-            set { _height = value; OnPropertyChanged(); }
-        }
-
-        public string Text
-        {
-            get => _text;
-            set { _text = value; OnPropertyChanged(); }
-        }
-
-        public string FontFamily
-        {
-            get => _fontFamily;
-            set { _fontFamily = value; OnPropertyChanged(); }
-        }
-
-        public double FontSize
-        {
-            get => _fontSize;
-            set { _fontSize = value; OnPropertyChanged(); }
-        }
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        // Existing properties
+        public double X { get; set; } // Position in pixels or millimeters
+        public double Y { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+        public string Text { get; set; } = "Nouvelle étiquette";
+        public double BorderThickness { get; set; } = 1.0;
+        public Brush BackgroundColor { get; set; } = Brushes.White;
+        public string FontFamily { get; set; } = "Arial";
+        public double FontSize { get; set; } = 12;
+        public string HorizontalAlignment { get; set; } = "Centre"; // Centre, Gauche, Droite
+        public string VerticalAlignment { get; set; } = "Milieu";  // Haut, Milieu, Bas
+        public string Shape { get; set; } = "Rectangle"; // Rectangle, Ellipse, Losange
+        public string Action { get; set; } = "Découpe";
+
+        // New properties
+        private Brush borderColor = Brushes.Black; // Default value
+        public Brush BorderColor
+        {
+            get => borderColor;
+            set
+            {
+                if (borderColor != value)
+                {
+                    borderColor = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        private string image;
+        public string Image
+        {
+            get => image;
+            set
+            {
+                if (image != value)
+                {
+                    image = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        // Conversion properties for millimeters
+        private const double PixelsPerMillimeter = 3.7795275591; // Conversion ratio
+
+        public double XInMillimeters
+        {
+            get => X / PixelsPerMillimeter;
+            set => X = value * PixelsPerMillimeter;
+        }
+
+        public double YInMillimeters
+        {
+            get => Y / PixelsPerMillimeter;
+            set => Y = value * PixelsPerMillimeter;
+        }
+
+        public double WidthInMillimeters
+        {
+            get => Width / PixelsPerMillimeter;
+            set => Width = value * PixelsPerMillimeter;
+        }
+
+        public double HeightInMillimeters
+        {
+            get => Height / PixelsPerMillimeter;
+            set => Height = value * PixelsPerMillimeter;
+        }
+
+        public override string ToString()
+        {
+            return $"LabelModel: {Text}, Position: ({XInMillimeters} mm, {YInMillimeters} mm), " +
+                   $"Dimensions: {WidthInMillimeters} mm x {HeightInMillimeters} mm, Shape: {Shape}";
         }
     }
 }

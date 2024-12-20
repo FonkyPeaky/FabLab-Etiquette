@@ -1,7 +1,6 @@
 ﻿using FabLab_Etiquette.Models;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
-using System.Collections.ObjectModel;
 
 
 namespace FabLab_Etiquette.Services
@@ -33,7 +32,6 @@ namespace FabLab_Etiquette.Services
             return _gfx;
         }
 
-
         public static PdfPage GetPage()
         {
             if (_currentPage == null)
@@ -59,48 +57,60 @@ namespace FabLab_Etiquette.Services
             _currentPage = null;
         }
 
-        public static void CreateLabelsPdf(ObservableCollection<LabelModel> labels, string outputPath)
+        public static void CreateLabelsPdf(IEnumerable<LabelModel> labels, string outputPath)
         {
-            var document = new PdfDocument();
-            var page = document.AddPage();
-            var gfx = XGraphics.FromPdfPage(page);
-
-            foreach (var label in labels)
+            using (var document = new PdfDocument())
             {
-                var pen = new XPen(XColors.Red, label.BorderThickness); // Bordure rouge
-                var brush = XBrushes.White; // Fond blanc
+                var page = document.AddPage();
+                page.Width = XUnit.FromMillimeter(600);  // Largeur du PDF en mm
+                page.Height = XUnit.FromMillimeter(300); // Hauteur du PDF en mm
 
-                // Dessin des formes
-                switch (label.Shape)
+                var gfx = XGraphics.FromPdfPage(page);
+
+                foreach (var label in labels)
                 {
-                    case "Rectangle":
-                        gfx.DrawRectangle(pen, brush, XUnit.FromPoint(label.X), XUnit.FromPoint(label.Y), XUnit.FromPoint(label.Width), XUnit.FromPoint(label.Height));
-                        break;
+                    // Dessiner les formes dans le PDF avec les dimensions réelles
+                    var pen = new XPen(XColors.Red, label.BorderThickness); // Bordure rouge
+                    var brush = XBrushes.White; // Fond blanc
 
-                    case "Ellipse":
-                        gfx.DrawEllipse(pen, brush, XUnit.FromPoint(label.X), XUnit.FromPoint(label.Y), XUnit.FromPoint(label.Width), XUnit.FromPoint(label.Height));
-                        break;
+                    switch (label.Shape.ToLower())
+                    {
+                        case "rectangle":
+                            gfx.DrawRectangle(pen, brush, label.X, label.Y, label.Width, label.Height);
+                            break;
 
-                    case "Losange":
-                        var points = new XPoint[]
-                        {
-                        new XPoint(label.X + label.Width / 2, label.Y),
-                        new XPoint(label.X + label.Width, label.Y + label.Height / 2),
-                        new XPoint(label.X + label.Width / 2, label.Y + label.Height),
-                        new XPoint(label.X, label.Y + label.Height / 2)
-                        };
-                        gfx.DrawPolygon(pen, brush, points, XFillMode.Winding);
-                        break;
+                        case "ellipse":
+                            gfx.DrawEllipse(pen, brush, label.X, label.Y, label.Width, label.Height);
+                            break;
+
+                        case "losange":
+                            var points = new[]
+                            {
+                        new XPoint(label.X + label.Width / 2, label.Y),                // Haut
+                        new XPoint(label.X + label.Width, label.Y + label.Height / 2), // Droite
+                        new XPoint(label.X + label.Width / 2, label.Y + label.Height), // Bas
+                        new XPoint(label.X, label.Y + label.Height / 2)               // Gauche
+                    };
+                            gfx.DrawPolygon(pen, brush, points, XFillMode.Winding);
+                            break;
+
+                        default:
+                            gfx.DrawRectangle(pen, brush, label.X, label.Y, label.Width, label.Height);
+                            break;
+                    }
+
+                    // Dessiner le texte centré dans l'étiquette
+                    var font = new XFont(label.FontFamily, label.FontSize);
+                    var textBrush = label.Action?.ToLower() == "gravure" ? XBrushes.Black : XBrushes.Black;
+
+                    gfx.DrawString(label.Text, font, textBrush,
+                        new XRect(label.X, label.Y, label.Width, label.Height), XStringFormats.Center);
                 }
 
-                // Dessiner le texte
-                var font = new XFont("Arial", label.FontSize);
-                gfx.DrawString(label.Text, font, XBrushes.Black, new XRect(XUnit.FromPoint(label.X), XUnit.FromPoint(label.Y), XUnit.FromPoint(label.Width), XUnit.FromPoint(label.Height)), XStringFormats.Center);
+                // Sauvegarder le document PDF
+                document.Save(outputPath);
+                System.Diagnostics.Debug.WriteLine($"PDF généré : {outputPath}");
             }
-
-            // Sauvegarder le PDF
-            document.Save(outputPath);
-            document.Close();
         }
     }
 }

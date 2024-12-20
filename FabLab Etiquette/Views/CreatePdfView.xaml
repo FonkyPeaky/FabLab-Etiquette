@@ -146,15 +146,16 @@
                 Grid.Column="2"
                 Background="LightGray"
                 Width="1110" 
-                Height="619"  
+                Height="440"  
                 HorizontalAlignment="Center"
-                VerticalAlignment="Top"
+                VerticalAlignment="Center"
                 ClipToBounds="True"
-                RenderTransformOrigin="0.5,0.5" Margin="0,112,0,0">
+                RenderTransformOrigin="0.5,0.5">
             <Canvas.RenderTransform>
                 <ScaleTransform ScaleX="1" ScaleY="1" />
                 <!-- Échelle initiale -->
             </Canvas.RenderTransform>
+
         </Canvas>
     </Grid>
 </Window>

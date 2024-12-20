@@ -6,6 +6,7 @@ using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -144,17 +145,19 @@ namespace FabLab_Etiquette.ViewModels
                     System.Diagnostics.Debug.WriteLine($"SelectedLabel : Texte={SelectedLabel.Text}, X={SelectedLabel.X}, Y={SelectedLabel.Y}");
                 }
 
-                BitmapImage image = new BitmapImage(new Uri(openFileDialog.FileName));
-                SelectedLabel.Image = image;
+                string imagePath = openFileDialog.FileName;
+                SelectedLabel.Image = imagePath;
+
                 // Mettre à jour la prévisualisation
-                // Mettre à jour la prévisualisation
+                var image = new BitmapImage(new Uri(imagePath));
+
+                // Mettre à jour la prévisualisation via la méthode existante
                 var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
                 view?.DrawLabels();
 
                 System.Windows.MessageBox.Show("Image ajoutée avec succès !");
             }
         }
-
 
         private void RearrangeLabels()
         {
@@ -272,25 +275,22 @@ namespace FabLab_Etiquette.ViewModels
             var pen = new XPen(XColors.Red, 2);
             gfx.DrawRectangle(pen, XBrushes.Transparent, 50, 50, 100, 50);
 
-            var Labels = new List<LabelModel>
-            {
-                new LabelModel
-                {
-                    X = 10,
-                    Y = 20,
-                    Width = 100,
-                    Height = 50,
-                    Shape = "Rectangle",
-                    Text = "Exemple",
-                    Action = "Gravure",
-                    FontFamily = "Arial",
-                    FontSize = 12,
-                    BorderThickness = 1
-                }
-            };
-
-            string fileName = $"Etiquette_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-            string outputPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+            /* var Labels = new List<LabelModel>
+             {
+                 new LabelModel
+                 {
+                     X = 10,
+                     Y = 20,
+                     Width = 100,
+                     Height = 50,
+                     Shape = "Rectangle",
+                     Text = "Exemple",
+                     Action = "Gravure",
+                     FontFamily = "Arial",
+                     FontSize = 12,
+                     BorderThickness = 1
+                 }
+             };*/
 
             if (Labels.Count == 0)
             {
@@ -298,17 +298,21 @@ namespace FabLab_Etiquette.ViewModels
                 return;
             }
 
+            // Convertir en ObservableCollection pour correspondre à CreateLabelsPdf
             var observableLabels = new ObservableCollection<LabelModel>(Labels);
 
-            // Générer le PDF
-            //FabLab_Etiquette.Services.PdfService.CreateLabelsPdf(Labels, _pdfPath);
+            string exePath = AppDomain.CurrentDomain.BaseDirectory;
+            string projectRootPath = Path.GetFullPath(Path.Combine(exePath, @"..\..\..\.."));
+            string fileName = $"Etiquette_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+            string outputPath = Path.Combine(projectRootPath, fileName);
 
-            // Notifier l'interface utilisateur
-            var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
+            // Appeler la méthode du service
+            FabLab_Etiquette.Services.PdfService.CreateLabelsPdf(observableLabels, outputPath);
 
             MessageBox.Show($"PDF généré avec succès : {outputPath}",
                             "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -354,7 +358,6 @@ namespace FabLab_Etiquette.ViewModels
                 }
             }
         }
-
 
         private void AlignLabels()
         {

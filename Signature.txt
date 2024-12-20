@@ -1,0 +1,45 @@
+PS C:\Users\Elafi\source\repos\FabLab Etiquette> signtool sign /a /tr http://timestamp.digicert.com /td SHA256 /fd SHA256 /v "C:\Users\Elafi\source\repos\FabLab Etiquette\FabLab Etiquette\bin\Debug\net8.0-windows\FabLab Etiquette.exe"
+
+The following certificates have been found to be suitable for signing:
+    Issued to: trust_23f1a650-d69c-4b6c-8fc9-ebd6826fbad9
+    Issued by: trust_23f1a650-d69c-4b6c-8fc9-ebd6826fbad9
+    Expires:   Sat Nov 29 20:07:55 2025
+    SHA1 hash: A73E9ED09375303FA62BD69AC919647776B3411E
+
+    Issued to: trust_23f1a650-d69c-4b6c-8fc9-ebd6826fbad9
+    Issued by: trust_23f1a650-d69c-4b6c-8fc9-ebd6826fbad9
+    Expires:   Sat Nov 29 20:07:54 2025
+    SHA1 hash: 732E982698D0E03F07F81DF3BD11781EDE38742B
+
+    Issued to: trust_6028ae99-bad4-40e3-8d92-f545cd05cb3d
+    Issued by: trust_6028ae99-bad4-40e3-8d92-f545cd05cb3d
+    Expires:   Mon Apr 14 17:54:12 2025
+    SHA1 hash: 53494EE945CE415A5BFBF9524EB9B1DB61271759
+
+    Issued to: trust_
+    Issued by: trust_
+    Expires:   Mon Apr 14 17:54:07 2025
+    SHA1 hash: 48EE6350B9FD2F995B873F5137B2F5779FD3EFD0
+
+    Issued to: 23f1a650-d69c-4b6c-8fc9-ebd6826fbad9
+    Issued by: 23f1a650-d69c-4b6c-8fc9-ebd6826fbad9
+    Expires:   Tue Nov 25 22:53:23 2025
+    SHA1 hash: 482B080AD8FA9214A9B4C9A5920C742EE80EDE57
+
+    Issued to: 6028ae99-bad4-40e3-8d92-f545cd05cb3d
+    Issued by: 6028ae99-bad4-40e3-8d92-f545cd05cb3d
+    Expires:   Mon Apr 14 17:54:07 2025
+    SHA1 hash: 0EAEED25B9EA9509A72963267A840686818FD68F
+
+The following certificate was selected:
+    Issued to: trust_23f1a650-d69c-4b6c-8fc9-ebd6826fbad9
+    Issued by: trust_23f1a650-d69c-4b6c-8fc9-ebd6826fbad9
+    Expires:   Sat Nov 29 20:07:55 2025
+    SHA1 hash: A73E9ED09375303FA62BD69AC919647776B3411E
+
+Done Adding Additional Store
+Successfully signed: C:\Users\Elafi\source\repos\FabLab Etiquette\FabLab Etiquette\bin\Debug\net8.0-windows\FabLab Etiquette.exe
+
+Number of files successfully Signed: 1
+Number of warnings: 0
+Number of errors: 0

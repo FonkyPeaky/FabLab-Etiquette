@@ -1,5 +1,6 @@
 ﻿using FabLab_Etiquette.ViewModels;
 using PdfSharp.Drawing;
+using System.Reflection.Emit;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -13,6 +14,8 @@ namespace FabLab_Etiquette.Views
     /// </summary>
     public partial class CreatePdfView : Window
     {
+
+        
         public CreatePdfView()
         {
             InitializeComponent();
@@ -33,7 +36,6 @@ namespace FabLab_Etiquette.Views
             settingsWindow.ShowDialog();
         }
 
-
         public void DrawLabels()
         {
             System.Diagnostics.Debug.WriteLine("Méthode DrawLabels appelée !");
@@ -42,143 +44,101 @@ namespace FabLab_Etiquette.Views
             var viewModel = DataContext as CreatePdfViewModel;
             if (viewModel == null || viewModel.Labels == null) return;
 
-            const double scaleFactor = 1.5; // Facteur d'échelle pour prévisualisation
+            // Calculer l'échelle entre le Canva (pixels) et le PDF (millimètres)
+            double scaleX = 1110.0 / 2267.0; // Canva width / PDF width (mm)
+            double scaleY = 619.0 / 1133.0;  // Canva height / PDF height (mm)
+            double scaleFactor = Math.Min(scaleX, scaleY); // Utiliser le facteur d'échelle le plus petit
 
             foreach (var label in viewModel.Labels)
             {
+                // Appliquer l'échelle pour le Canva
+                double x = label.X * scaleFactor;
+                double y = label.Y * scaleFactor;
+                double width = label.Width * scaleFactor;
+                double height = label.Height * scaleFactor;
+                double borderThickness = label.BorderThickness * scaleFactor;
+                double fontSize = label.FontSize * scaleFactor;
 
-                // Positions et dimensions originales (non échelonnées)
-                double x = label.X;
-                double y = label.Y;
-                double width = label.Width;
-                double height = label.Height;
-
-                // Échelle pour la prévisualisation WPF
-                double scaledX = x / scaleFactor;
-                double scaledY = y / scaleFactor;
-                double scaledWidth = width / scaleFactor;
-                double scaledHeight = height / scaleFactor;
-                double borderThickness = label.BorderThickness / scaleFactor;
-                double fontSize = label.FontSize / scaleFactor;
-
-                // Création de la forme pour le Canvas WPF
-                Shape shapeElement = null;
-                switch (label.Shape)
+                // Dessiner la forme selon son type
+                Shape shapeElement;
+                switch (label.Shape.ToLower())
                 {
-                    case "Rectangle":
+                    case "rectangle":
                         shapeElement = new Rectangle
                         {
-                            Width = scaledWidth,
-                            Height = scaledHeight,
+                            Width = width,
+                            Height = height,
                             Stroke = Brushes.Red,
                             StrokeThickness = borderThickness,
-                            Fill = Brushes.White
+                            Fill = Brushes.White // Fond blanc
                         };
                         break;
 
-                    case "Ellipse":
+                    case "ellipse":
                         shapeElement = new Ellipse
                         {
-                            Width = scaledWidth,
-                            Height = scaledHeight,
+                            Width = width,
+                            Height = height,
                             Stroke = Brushes.Red,
                             StrokeThickness = borderThickness,
-                            Fill = Brushes.White
+                            Fill = Brushes.White // Fond blanc
                         };
                         break;
 
-                    case "Losange":
+                    case "losange":
                         var losange = new Polygon
                         {
                             Points = new PointCollection
                     {
-                        new Point(scaledWidth / 2, 0),
-                        new Point(scaledWidth, scaledHeight / 2),
-                        new Point(scaledWidth / 2, scaledHeight),
-                        new Point(0, scaledHeight / 2)
+                        new Point(width / 2, 0),        // Haut
+                        new Point(width, height / 2),  // Droite
+                        new Point(width / 2, height),  // Bas
+                        new Point(0, height / 2)       // Gauche
                     },
                             Stroke = Brushes.Red,
                             StrokeThickness = borderThickness,
-                            Fill = Brushes.White
+                            Fill = Brushes.White // Fond blanc
                         };
                         shapeElement = losange;
                         break;
+
+                    default:
+                        shapeElement = new Rectangle
+                        {
+                            Width = width,
+                            Height = height,
+                            Stroke = Brushes.Red,
+                            StrokeThickness = borderThickness,
+                            Fill = Brushes.White // Fond blanc
+                        };
+                        break;
                 }
 
-                // Positionner la forme dans le Canvas
-                if (shapeElement != null)
-                {
-                    Canvas.SetLeft(shapeElement, scaledX);
-                    Canvas.SetTop(shapeElement, scaledY);
-                    PreviewCanvas.Children.Add(shapeElement);
-                }
+                // Positionner la forme dans le Canva
+                Canvas.SetLeft(shapeElement, x);
+                Canvas.SetTop(shapeElement, y);
+                PreviewCanvas.Children.Add(shapeElement);
 
-                // Ajouter le texte
+                // Dessiner le texte centré dans l'étiquette
                 var textBlock = new TextBlock
                 {
                     Text = label.Text,
                     FontSize = fontSize,
-                    Foreground = Brushes.Black,
-                    Width = scaledWidth,
-                    Height = scaledHeight,
+                    Foreground = label.Action?.ToLower() == "gravure" ? Brushes.Black : Brushes.Black,
+                    Width = width,
+                    Height = height,
                     TextAlignment = TextAlignment.Center,
                     TextWrapping = TextWrapping.Wrap
                 };
-                Canvas.SetLeft(textBlock, scaledX);
-                Canvas.SetTop(textBlock, scaledY + (scaledHeight - fontSize) / 2);
+
+                // Centrage vertical manuel pour le texte
+                double textY = y + (height - fontSize) / 2;
+                Canvas.SetLeft(textBlock, x);
+                Canvas.SetTop(textBlock, textY);
                 PreviewCanvas.Children.Add(textBlock);
 
-                // --- Dessin dans le PDF ---
-                var gfx = FabLab_Etiquette.Services.PdfService.GetGraphics();
-
-                // Conversion des unités de pixels en points (1 pixel = 0.75 point)
-                double unitConversion = 0.75;
-                double pdfX = x * unitConversion;
-                double pdfY = y * unitConversion;
-                double pdfWidth = width * unitConversion;
-                double pdfHeight = height * unitConversion;
-
-                // Création des objets pour PDFsharp
-                var pen = new XPen(XColors.Red, label.BorderThickness);
-                var brush = XBrushes.White;
-                var font = new XFont(label.FontFamily, label.FontSize);
-                var textBrush = XBrushes.Black;
-
-                switch (label.Shape)
-                {
-                    case "Rectangle":
-                        gfx.DrawRectangle(pen, brush, pdfX, pdfY, pdfWidth, pdfHeight);
-                        break;
-
-                    case "Ellipse":
-                        gfx.DrawEllipse(pen, brush, pdfX, pdfY, pdfWidth, pdfHeight);
-                        break;
-
-                    case "Losange":
-                        var points = new[]
-                        {
-                    new XPoint(pdfX + pdfWidth / 2, pdfY),
-                    new XPoint(pdfX + pdfWidth, pdfY + pdfHeight / 2),
-                    new XPoint(pdfX + pdfWidth / 2, pdfY + pdfHeight),
-                    new XPoint(pdfX, pdfY + pdfHeight / 2)
-                };
-                        gfx.DrawPolygon(pen, brush, points, XFillMode.Winding);
-                        break;
-                }
-
-                // Dessiner le texte dans le PDF
-                var layoutRect = new XRect(pdfX, pdfY, pdfWidth, pdfHeight);
-                var format = new XStringFormat
-                {
-                    Alignment = XStringAlignment.Center,
-                    LineAlignment = XLineAlignment.Center
-                };
-                gfx.DrawString(label.Text, font, textBrush, layoutRect, format);
+                System.Diagnostics.Debug.WriteLine($"Ajouté au Canva : {label.Text} à ({x}, {y})");
             }
         }
-
-
-
-
     }
 }

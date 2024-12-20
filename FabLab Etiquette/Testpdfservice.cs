@@ -16,6 +16,6 @@ public class TestPdfService
         };
 
         string path = @"C:\Temp\Test.pdf";
-        PdfService.CreateLabelsPdf(labels, path);
+        
     }
 }
