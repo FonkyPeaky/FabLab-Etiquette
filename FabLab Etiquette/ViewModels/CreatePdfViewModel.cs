@@ -2,11 +2,9 @@
 using FabLab_Etiquette.Models;
 using FabLab_Etiquette.Views;
 using Microsoft.Win32;
-using PdfSharp.Drawing;
-using PdfSharp.Pdf;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -29,8 +27,38 @@ namespace FabLab_Etiquette.ViewModels
         public event PropertyChangedEventHandler PropertyChanged;
         private LabelModel _selectedLabel;
         private bool _isGridVisible;
-        public string _pdfPath = @"C:\Temp\Etiquettes.pdf"; // Chemin du fichier PDF
+        public string _pdfPath = @"C:\Temp\Etiquettes.pdf"; // Chemin du fichier PDF pour test
 
+        public string UserName { get; set; } = "INCONNU";
+        public string UserService { get; set; } = "SERVICE";
+        public string UserNumber { get; set; } = "00000";
+        public string LabelTitle { get; set; } = "Nouvelle étiquette";
+        public string LabelColor { get; set; } = "Blanc";
+        public string LabelStyle { get; set; } = "1.6";
+        public int PrintCount { get; set; } = 1;
+        public ObservableCollection<LabelModel> LabelList { get; set; } = new ObservableCollection<LabelModel>();
+
+        private string _imageSource;
+        public string ImageSource
+        {
+            get => _imageSource;
+            set
+            {
+                _imageSource = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _selectedFilePath;
+        public string SelectedFilePath
+        {
+            get => _selectedFilePath;
+            set
+            {
+                _selectedFilePath = value;
+                OnPropertyChanged(nameof(SelectedFilePath));
+            }
+        }
 
         public bool IsGridVisible
         {
@@ -75,10 +103,11 @@ namespace FabLab_Etiquette.ViewModels
             view?.DrawLabels();
         }
 
-
         public CreatePdfViewModel()
         {
+
             Labels = new ObservableCollection<LabelModel>();
+            LabelList = new ObservableCollection<LabelModel>();
             AddLabelCommand = new RelayCommand(AddLabel);
             GeneratePdfCommand = new RelayCommand(GeneratePdf);
             UpdateSelectedLabelCommand = new RelayCommand(UpdateSelectedLabel);
@@ -91,6 +120,8 @@ namespace FabLab_Etiquette.ViewModels
                 IsGridVisible = !IsGridVisible; // Alterne l'état
             });
 
+            Debug.WriteLine($"🔍 LabelList initialisée : {LabelList.Count} étiquettes.");
+            Debug.WriteLine($"🔍 Initialisation LabelList : {LabelList?.Count ?? 0} étiquettes.");
 
             Labels.CollectionChanged += (s, e) =>
             {
@@ -110,12 +141,26 @@ namespace FabLab_Etiquette.ViewModels
                     }
                 }
 
-                // Actualiser après modification de la collection
+                SyncLabelList(); // 🟢 Synchroniser immédiatement après une modification
+
+                Debug.WriteLine($"🟢 Labels: {Labels.Count} étiquettes");
+                Debug.WriteLine($"🟢 LabelList: {LabelList.Count} étiquettes");
+
                 var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
                 view?.DrawLabels();
             };
 
         }
+
+        public void SyncLabelList()
+        {
+            LabelList.Clear();
+            foreach (var label in Labels)
+            {
+                LabelList.Add(label);
+            }
+        }
+
         public void AddImageToLabel()
         {
             if (SelectedLabel == null)
@@ -142,11 +187,11 @@ namespace FabLab_Etiquette.ViewModels
                 }
                 else
                 {
-                    System.Diagnostics.Debug.WriteLine($"SelectedLabel : Texte={SelectedLabel.Text}, X={SelectedLabel.X}, Y={SelectedLabel.Y}");
+                    System.Diagnostics.Debug.WriteLine($"📌 SelectedLabel : Texte={SelectedLabel.Text}, X={SelectedLabel.X}, Y={SelectedLabel.Y}");
                 }
 
                 string imagePath = openFileDialog.FileName;
-                SelectedLabel.Image = imagePath;
+                SelectedLabel.ImageSource = imagePath; // ✅ Utilisation de `ImageSource`
 
                 // Mettre à jour la prévisualisation
                 var image = new BitmapImage(new Uri(imagePath));
@@ -186,24 +231,35 @@ namespace FabLab_Etiquette.ViewModels
                 }
             }
         }
-
-
-        private void UpdateSelectedLabel()
+        public void UpdateSelectedLabel()
         {
             if (SelectedLabel != null)
             {
-                OnPropertyChanged(nameof(SelectedLabel)); // Notifie l'interface utilisateur
-                System.Windows.MessageBox.Show("Étiquette mise à jour !");
+                SelectedLabel.Text = SelectedLabel.Text.Trim();
+                OnPropertyChanged(nameof(SelectedLabel));
+                var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
+                view?.DrawLabels();
             }
         }
 
         private void AddLabel()
         {
-            const double scaleFactor = 1.5; // Facteur d'échelle pour la prévisualisation
-            const double canvasWidth = 1110; // Largeur visible à l'écran
-            const double canvasHeight = 619; // Hauteur visible à l'écran
-            const double realWidth = canvasWidth * scaleFactor; // Largeur réelle
-            const double realHeight = canvasHeight * scaleFactor; // Hauteur réelle
+            const double scaleFactor = 1;
+            const double canvasWidth = 1237;
+            const double canvasHeight = 666;
+            const double realWidth = canvasWidth * scaleFactor;
+            const double realHeight = canvasHeight * scaleFactor;
+
+            // 🔥 Copier les valeurs en cours de saisie 🔥
+            string existingText = SelectedLabel?.Text ?? "Nouvelle étiquette";
+            double existingWidth = SelectedLabel?.Width ?? 100;
+            double existingHeight = SelectedLabel?.Height ?? 50;
+            string existingFontFamily = SelectedLabel?.FontFamily ?? "Arial";
+            double existingFontSize = SelectedLabel?.FontSize ?? 10;
+            Brush existingBackgroundColor = SelectedLabel?.BackgroundColor ?? Brushes.White;
+            Brush existingBorderColor = SelectedLabel?.BorderColor ?? Brushes.Red;
+            double existingBorderThickness = SelectedLabel?.BorderThickness ?? 2;
+            string existingShape = SelectedLabel?.Shape ?? "Rectangle";
 
             LabelModel newLabel;
 
@@ -212,20 +268,20 @@ namespace FabLab_Etiquette.ViewModels
                 var lastLabel = Labels.Last();
                 newLabel = new LabelModel
                 {
-                    X = lastLabel.X, // Même colonne que la dernière étiquette
-                    Y = lastLabel.Y + lastLabel.Height, // Position en dessous
-                    Width = lastLabel.Width,
-                    Height = lastLabel.Height,
-                    Text = lastLabel.Text,
-                    FontFamily = lastLabel.FontFamily,
-                    FontSize = lastLabel.FontSize,
-                    BackgroundColor = lastLabel.BackgroundColor,
-                    BorderColor = lastLabel.BorderColor,
-                    BorderThickness = lastLabel.BorderThickness,
-                    Shape = lastLabel.Shape
+                    X = lastLabel.X,
+                    Y = lastLabel.Y + lastLabel.Height,
+                    Width = existingWidth,
+                    Height = existingHeight,
+                    Text = existingText,  // 🔥 On garde le texte saisi
+                    FontFamily = existingFontFamily,
+                    FontSize = existingFontSize,
+                    BackgroundColor = existingBackgroundColor,
+                    BorderColor = existingBorderColor,
+                    BorderThickness = existingBorderThickness,
+                    Shape = existingShape
                 };
 
-                // Détection des dépassements en coordonnées réelles
+                // Vérification des limites
                 if (newLabel.Y + newLabel.Height > realHeight)
                 {
                     newLabel.Y = 0;
@@ -240,79 +296,89 @@ namespace FabLab_Etiquette.ViewModels
             }
             else
             {
-                // Valeurs par défaut pour la première étiquette
+                // Création de la première étiquette avec les valeurs saisies
                 newLabel = new LabelModel
                 {
                     X = 0,
                     Y = 0,
-                    Width = 100,
-                    Height = 50,
-                    Text = "Nouvelle étiquette",
-                    FontFamily = "Arial",
-                    FontSize = 10,
-                    BackgroundColor = Brushes.White,
-                    BorderColor = Brushes.Red,
-                    BorderThickness = 2,
-                    Shape = "Rectangle"
+                    Width = existingWidth,
+                    Height = existingHeight,
+                    Text = existingText, // 🔥 On garde le texte saisi
+                    FontFamily = existingFontFamily,
+                    FontSize = existingFontSize,
+                    BackgroundColor = existingBackgroundColor,
+                    BorderColor = existingBorderColor,
+                    BorderThickness = existingBorderThickness,
+                    Shape = existingShape
                 };
             }
 
-            // Ajouter l'étiquette
+            // Ajout et mise à jour
             Labels.Add(newLabel);
             SelectedLabel = newLabel;
 
-            // Mettre à jour l'affichage
+            // Mise à jour de l'affichage
             var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
             view?.DrawLabels();
         }
 
+
+
+        private bool AskUserForDetails()
+        {
+            var userInfoWindow = new UserInfoWindow();
+            if (userInfoWindow.ShowDialog() == true)
+            {
+                UserName = userInfoWindow.UserName;
+                UserService = userInfoWindow.UserService;
+                UserNumber = userInfoWindow.UserNumber;
+                return true;
+            }
+            return false;
+        }
+
         public void GeneratePdf()
         {
-            var document = new PdfDocument();
-            var page = document.AddPage();
-            var gfx = XGraphics.FromPdfPage(page);
-
-            var pen = new XPen(XColors.Red, 2);
-            gfx.DrawRectangle(pen, XBrushes.Transparent, 50, 50, 100, 50);
-
-            /* var Labels = new List<LabelModel>
-             {
-                 new LabelModel
-                 {
-                     X = 10,
-                     Y = 20,
-                     Width = 100,
-                     Height = 50,
-                     Shape = "Rectangle",
-                     Text = "Exemple",
-                     Action = "Gravure",
-                     FontFamily = "Arial",
-                     FontSize = 12,
-                     BorderThickness = 1
-                 }
-             };*/
-
-            if (Labels.Count == 0)
+            if (Labels == null || Labels.Count == 0)
             {
-                System.Windows.MessageBox.Show("Aucune étiquette à générer !");
+                MessageBox.Show("Aucune étiquette à générer !", "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
-            // Convertir en ObservableCollection pour correspondre à CreateLabelsPdf
-            var observableLabels = new ObservableCollection<LabelModel>(Labels);
+            if (!AskUserForDetails()) // 🚀 Demander les infos utilisateur
+            {
+                return; // Si l'utilisateur annule, ne pas générer le PDF
+            }
 
-            string exePath = AppDomain.CurrentDomain.BaseDirectory;
-            string projectRootPath = Path.GetFullPath(Path.Combine(exePath, @"..\..\..\.."));
-            string fileName = $"Etiquette_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-            string outputPath = Path.Combine(projectRootPath, fileName);
+            Microsoft.Win32.SaveFileDialog saveFileDialog = new Microsoft.Win32.SaveFileDialog
+            {
+                Filter = "PDF Files (*.pdf)|*.pdf",
+                Title = "Enregistrer le PDF",
+                FileName = GenerateStandardFileName()
+            };
 
-            // Appeler la méthode du service
-            FabLab_Etiquette.Services.PdfService.CreateLabelsPdf(observableLabels, outputPath);
+            if (saveFileDialog.ShowDialog() != true)
+            {
+                return; // L'utilisateur a annulé
+            }
 
-            MessageBox.Show($"PDF généré avec succès : {outputPath}",
-                            "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+            string outputPath = saveFileDialog.FileName;
+
+            try
+            {
+                var observableLabels = new ObservableCollection<LabelModel>(Labels);
+                FabLab_Etiquette.Services.PdfService.CreateLabelsPdf(observableLabels, outputPath);
+
+                SelectedFilePath = outputPath;
+                MessageBox.Show($"✅ PDF généré avec succès !\n\n📂 Emplacement : {outputPath}",
+                                "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"❌ Erreur lors de la génération du PDF : {ex.Message}",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
-
 
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
@@ -362,8 +428,8 @@ namespace FabLab_Etiquette.ViewModels
         private void AlignLabels()
         {
             const double padding = 0; // Espace entre les étiquettes
-            const double canvasWidth = 600; // Largeur de la zone d'affichage
-            const double canvasHeight = 300; // Hauteur de la zone d'affichage
+            const double canvasWidth = 1237; // Largeur de la zone d'affichage
+            const double canvasHeight = 666; // Hauteur de la zone d'affichage
 
             double currentX = padding;
             double currentY = padding;
@@ -395,6 +461,84 @@ namespace FabLab_Etiquette.ViewModels
             // Demander une mise à jour du Canvas
             var view = System.Windows.Application.Current.Windows.OfType<CreatePdfView>().FirstOrDefault();
             view?.DrawLabels();
+        }
+
+        private string GenerateStandardFileName()
+        {
+            if (string.IsNullOrWhiteSpace(UserName) ||
+                string.IsNullOrWhiteSpace(UserService) ||
+                string.IsNullOrWhiteSpace(UserNumber) ||
+                string.IsNullOrWhiteSpace(LabelTitle) ||
+                string.IsNullOrWhiteSpace(LabelColor) ||
+                string.IsNullOrWhiteSpace(LabelStyle) ||
+                Labels.Count == 0 ||
+                PrintCount <= 0)
+            {
+                MessageBox.Show("⚠ Certaines informations sont manquantes pour générer le nom du fichier.",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return "Etiquette_Invalide.pdf";
+            }
+
+            bool isAutocollant = LabelStyle.ToLower().Contains("autocollant");
+            string autocollantStr = isAutocollant ? "autocollant" : "non_autocollant";
+
+            // 📌 Récupérer l'étiquette sélectionnée, ou la première si aucune n'est choisie
+            string labelSampleText = SelectedLabel != null ? SelectedLabel.Text : Labels.FirstOrDefault()?.Text ?? "Sans_Texte";
+
+            // 📌 Nettoyage des caractères interdits et troncature à 30 caractères max
+            string safeLabelText = new string(labelSampleText.Where(c => char.IsLetterOrDigit(c) || c == ' ').ToArray());
+            safeLabelText = safeLabelText.Length > 30 ? safeLabelText.Substring(0, 30) : safeLabelText;
+
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+            string filename = $"{LabelColor}_{LabelStyle}_{autocollantStr}_x{PrintCount}#" +
+                              $"{UserName.ToUpper()}_{UserService.ToUpper()}_{UserNumber}#" +
+                              $"{LabelTitle}_{safeLabelText}_{SelectedLabel?.BackgroundColorHex}.pdf";
+
+
+            if (filename.Length > 100)
+                filename = filename.Substring(0, 100) + ".pdf";
+
+            return filename;
+        }
+
+        public string GenerateStandardJsonFileName()
+        {
+            if (string.IsNullOrWhiteSpace(UserName) ||
+                string.IsNullOrWhiteSpace(UserService) ||
+                string.IsNullOrWhiteSpace(UserNumber) ||
+                string.IsNullOrWhiteSpace(LabelTitle) ||
+                string.IsNullOrWhiteSpace(LabelColor) ||
+                string.IsNullOrWhiteSpace(LabelStyle) ||
+                Labels.Count == 0 ||
+                PrintCount <= 0)
+            {
+                MessageBox.Show("⚠ Certaines informations sont manquantes pour générer le nom du fichier.",
+                                "Erreur", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return "Etiquette_Invalide.json";
+            }
+
+            bool isAutocollant = LabelStyle.ToLower().Contains("autocollant");
+            string autocollantStr = isAutocollant ? "autocollant" : "non_autocollant";
+
+            // 📌 Récupérer l'étiquette sélectionnée, ou la première si aucune n'est choisie
+            string labelSampleText = SelectedLabel != null ? SelectedLabel.Text : Labels.FirstOrDefault()?.Text ?? "Sans_Texte";
+
+            // 📌 Nettoyage des caractères interdits et troncature à 30 caractères max
+            string safeLabelText = new string(labelSampleText.Where(c => char.IsLetterOrDigit(c) || c == ' ').ToArray());
+            safeLabelText = safeLabelText.Length > 30 ? safeLabelText.Substring(0, 30) : safeLabelText;
+
+            string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+
+            string filename = $"{LabelColor}_{LabelStyle}_{autocollantStr}_x{PrintCount}#" +
+                              $"{UserName.ToUpper()}_{UserService.ToUpper()}_{UserNumber}#" +
+                              $"{LabelTitle}_{safeLabelText}_{SelectedLabel?.BackgroundColorHex}#" +
+                              $"{LabelList.Count}_etiquettes.json";
+
+            if (filename.Length > 100)
+                filename = filename.Substring(0, 100) + ".json";
+
+            return filename;
         }
     }
 }

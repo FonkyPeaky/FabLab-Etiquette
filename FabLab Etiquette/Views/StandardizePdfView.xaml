@@ -1,9 +1,30 @@
 ﻿<Window x:Class="FabLab_Etiquette.Views.StandardizePdfView"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Standardiser un Fichier PDF" Height="300" Width="600">
-    <Grid>
-        <TextBlock Text="Fonctionnalité de standardisation en cours de développement..." 
-                   HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="20" />
+        xmlns:viewModels="clr-namespace:FabLab_Etiquette.ViewModels"
+        Title="Standardisation du PDF" Height="322" Width="500">
+    <Window.DataContext>
+        <viewModels:StandardizePdfViewModel/>
+    </Window.DataContext>
+    <Grid Margin="0,0,0,1">
+        <StackPanel Margin="20" VerticalAlignment="Center">
+            <TextBlock Text="Sélectionnez un fichier PDF à standardiser :"/>
+            <TextBox Text="{Binding SelectedFilePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="True" Margin="0,5"/>
+            <Button Content="Parcourir..." Command="{Binding SelectFileCommand}" Click="OnBrowseClicked" Width="100"/>
+
+            <Button Content="Test Sélection Fichier" Click="OnTestSelectFile" Margin="5"/>
+
+
+            <TextBlock Text="Nom du demandeur :" Margin="0,10,0,0"/>
+            <TextBox Text="{Binding UserName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <TextBlock Text="Service :" Margin="0,5,0,0"/>
+            <TextBox Text="{Binding UserService, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <TextBlock Text="Numéro :" Margin="0,5,0,0"/>
+            <TextBox Text="{Binding UserNumber, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+
+            <Button Content="Standardiser le fichier" Command="{Binding StandardizeFileCommand}" Margin="0,15,0,0" Width="200" HorizontalAlignment="Center"/>
+        </StackPanel>
     </Grid>
 </Window>

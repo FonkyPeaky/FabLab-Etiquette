@@ -88,9 +88,6 @@ namespace FabLab_Etiquette.ViewModels
                               $"{PdfName}_{PdfService}_{PdfNumber}_{PdfTitle}.pdf";
             string outputPath = System.IO.Path.Combine(@"C:\Temp\", fileName);
 
-
-
-
             // Appel au service PDF
             FabLab_Etiquette.Services.PdfService.CreateLabelsPdf(Labels, outputPath);
 
@@ -98,7 +95,6 @@ namespace FabLab_Etiquette.ViewModels
                             "Succès", MessageBoxButton.OK, MessageBoxImage.Information);
 
         }
-
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

@@ -1,4 +1,5 @@
-﻿using System.Windows.Input;
+﻿using System.Windows;
+using System.Windows.Input;
 
 namespace FabLab_Etiquette.Helpers
 {
@@ -7,9 +8,11 @@ namespace FabLab_Etiquette.Helpers
         private readonly Action _execute;
         private readonly Func<bool> _canExecute;
 
+        public event EventHandler CanExecuteChanged;
+
         public RelayCommand(Action execute, Func<bool> canExecute = null)
         {
-            _execute = execute;
+            _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
         }
 
@@ -17,10 +20,13 @@ namespace FabLab_Etiquette.Helpers
 
         public void Execute(object parameter) => _execute();
 
-        public event EventHandler CanExecuteChanged
+        public void RaiseCanExecuteChanged()
         {
-            add => CommandManager.RequerySuggested += value;
-            remove => CommandManager.RequerySuggested -= value;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+            });
         }
+
     }
 }

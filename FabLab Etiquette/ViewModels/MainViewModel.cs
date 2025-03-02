@@ -14,7 +14,6 @@ namespace FabLab_Etiquette.ViewModels
             CreatePdfCommand = new RelayCommand(OpenCreatePdfView);
             StandardizePdfCommand = new RelayCommand(OpenStandardizePdfView);
         }
-
         private void OpenCreatePdfView()
         {
             CreatePdfView view = new CreatePdfView();
@@ -23,7 +22,8 @@ namespace FabLab_Etiquette.ViewModels
 
         private void OpenStandardizePdfView()
         {
-            StandardizePdfView view = new StandardizePdfView();
+            var viewModel = new StandardizePdfViewModel();
+            var view = new StandardizePdfView { DataContext = viewModel };
             view.ShowDialog();
         }
     }

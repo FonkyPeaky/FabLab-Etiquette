@@ -1,6 +1,7 @@
 ﻿using FabLab_Etiquette.Models;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
+using System.Windows.Media;
 
 
 namespace FabLab_Etiquette.Services
@@ -31,7 +32,6 @@ namespace FabLab_Etiquette.Services
             }
             return _gfx;
         }
-
         public static PdfPage GetPage()
         {
             if (_currentPage == null)
@@ -70,8 +70,15 @@ namespace FabLab_Etiquette.Services
                 foreach (var label in labels)
                 {
                     // Dessiner les formes dans le PDF avec les dimensions réelles
-                    var pen = new XPen(XColors.Red, label.BorderThickness); // Bordure rouge
-                    var brush = XBrushes.White; // Fond blanc
+                    var brush = new XSolidBrush(XColor.FromArgb(((SolidColorBrush)label.BackgroundColor).Color.A,
+                                                                ((SolidColorBrush)label.BackgroundColor).Color.R,
+                                                                ((SolidColorBrush)label.BackgroundColor).Color.G,
+                                                                ((SolidColorBrush)label.BackgroundColor).Color.B));
+
+                    var pen = new XPen(XColor.FromArgb(((SolidColorBrush)label.BorderColor).Color.A,
+                                                       ((SolidColorBrush)label.BorderColor).Color.R,
+                                                       ((SolidColorBrush)label.BorderColor).Color.G,
+                                                       ((SolidColorBrush)label.BorderColor).Color.B), label.BorderThickness);
 
                     switch (label.Shape.ToLower())
                     {
