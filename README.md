@@ -107,5 +107,5 @@ La configuration utilisateur est stockée dans `%AppData%\FabLabEtiquette\config
 
 ## Développé par
 
-**Issam Elafi**  
+FonkyPeaky
 Projet relancé en 2026 à partir de la base d'Arnaud !
