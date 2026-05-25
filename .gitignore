@@ -1,0 +1,19 @@
+# Build outputs
+bin/
+obj/
+installer_output/
+
+# Visual Studio
+.vs/
+*.user
+
+# .NET
+*.suo
+*.ncrunchproject
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,61 @@
+<Window x:Class="FabLab_Etiquette.Views.FabricationParamsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Paramètres de fabrication" Height="480" Width="480"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+
+    <Grid>
+        <!-- Logos en fond -->
+        <Image Source="/Assets/Logo_Orano.PNG" Opacity="0.07" HorizontalAlignment="Right"
+               VerticalAlignment="Bottom" Width="150" Height="150" Margin="0,0,10,10"/>
+        <Image Source="/Assets/Fablab_Logo.png" Opacity="0.07" HorizontalAlignment="Left"
+               VerticalAlignment="Bottom" Width="120" Height="120" Margin="10,0,0,10"/>
+
+        <Grid Margin="25">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Text="Paramètres de fabrication" FontSize="16" FontWeight="Bold"
+                       Margin="0,0,0,20"/>
+
+            <StackPanel Grid.Row="1" VerticalAlignment="Top">
+
+                <TextBlock Text="Style de plaque :" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <ComboBox ItemsSource="{Binding PlateStyles}"
+                          SelectedItem="{Binding SelectedStyle}"
+                          DisplayMemberPath="DisplayName"
+                          Margin="0,0,0,14"
+                          Height="30"/>
+
+                <TextBlock Text="Couleur de la plaque :" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <ComboBox ItemsSource="{Binding AvailableColors}"
+                          SelectedItem="{Binding SelectedColor}"
+                          Margin="0,0,0,2"
+                          Height="30"/>
+                <TextBlock Text="Détermine la couleur de fond des étiquettes et le nom du fichier."
+                           FontSize="11" Foreground="Gray" Margin="0,0,0,14"/>
+
+                <TextBlock Text="Nombre d'impressions :" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding PrintCount, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,0,14" Height="28" Padding="4,4"/>
+
+                <TextBlock Text="Titre des étiquettes :" FontWeight="SemiBold" Margin="0,0,0,4"/>
+                <TextBox Text="{Binding LabelTitle, UpdateSourceTrigger=PropertyChanged}"
+                         Margin="0,0,0,4" Height="28" Padding="4,4"/>
+                <TextBlock Text="Ce titre apparaîtra dans le nom du fichier PDF."
+                           FontSize="11" Foreground="Gray" Margin="0,0,0,14"/>
+
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+                <Button Content="Annuler" Command="{Binding CancelCommand}"
+                        Width="100" Height="34" Margin="0,0,10,0"/>
+                <Button Content="Valider ▶" Command="{Binding ValidateCommand}"
+                        Width="110" Height="34"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

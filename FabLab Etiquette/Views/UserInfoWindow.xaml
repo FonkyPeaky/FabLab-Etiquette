@@ -1,0 +1,30 @@
+<Window x:Class="FabLab_Etiquette.Views.UserInfoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Informations demandeur" Height="380" Width="420"
+        WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+
+    <Grid>
+        <!-- Logos en fond -->
+        <Image Source="/Assets/Logo_Orano.PNG" Opacity="0.07" HorizontalAlignment="Right"
+               VerticalAlignment="Bottom" Width="130" Height="130" Margin="0,0,10,10"/>
+        <Image Source="/Assets/Fablab_Logo.png" Opacity="0.07" HorizontalAlignment="Left"
+               VerticalAlignment="Bottom" Width="110" Height="110" Margin="10,0,0,10"/>
+
+        <StackPanel Margin="30">
+            <TextBlock Text="Informations demandeur" FontSize="16" FontWeight="Bold" Margin="0,0,0,20"/>
+
+            <TextBlock Text="Nom de famille :"/>
+            <TextBox x:Name="UserNameTextBox" Margin="0,4,0,12" Height="28" Padding="4,4"/>
+
+            <TextBlock Text="Service :"/>
+            <TextBox x:Name="UserServiceTextBox" Margin="0,4,0,12" Height="28" Padding="4,4"/>
+
+            <TextBlock Text="Numéro interne (format 5XXXX) :"/>
+            <TextBox x:Name="UserNumberTextBox" Margin="0,4,0,20" Height="28" Padding="4,4"/>
+
+            <Button Content="Valider ▶" Click="OnValidateClick"
+                    HorizontalAlignment="Right" Width="110" Height="34"/>
+        </StackPanel>
+    </Grid>
+</Window>

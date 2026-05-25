@@ -1,0 +1,55 @@
+<Window x:Class="FabLab_Etiquette.Views.AdminWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Administration — FabLab Étiquette" Height="560" Width="860"
+        WindowStartupLocation="CenterScreen" ResizeMode="CanResizeWithGrip">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Administration" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
+
+        <!-- Chemin de sortie par défaut -->
+        <TextBlock Grid.Row="1" Text="Dossier de sortie des PDF :" FontWeight="SemiBold" Margin="0,0,0,5"/>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,20">
+            <TextBox Text="{Binding DefaultOutputPath, UpdateSourceTrigger=PropertyChanged}"
+                     Width="550" Height="28" VerticalContentAlignment="Center" Padding="4,0" Margin="0,0,10,0"/>
+            <Button Content="Parcourir..." Command="{Binding BrowseOutputPathCommand}" Width="100" Height="28"/>
+        </StackPanel>
+
+        <!-- Tableau des styles -->
+        <TextBlock Grid.Row="3" Text="Styles de plaques disponibles :" FontWeight="SemiBold"
+                   VerticalAlignment="Top" Margin="0,0,0,5"/>
+        <DataGrid Grid.Row="3" ItemsSource="{Binding Styles}" SelectedItem="{Binding SelectedStyle}"
+                  AutoGenerateColumns="False" CanUserAddRows="False"
+                  Margin="0,25,0,5" SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Nom" Binding="{Binding Name}" Width="*"/>
+                <DataGridTextColumn Header="Épaisseur (mm)" Binding="{Binding Thickness}" Width="120"/>
+                <DataGridCheckBoxColumn Header="Autocollante" Binding="{Binding IsAdhesive}" Width="100"/>
+                <DataGridTextColumn Header="Couleurs disponibles (séparées par des virgules)"
+                                    Binding="{Binding ColorsText}" Width="2.5*"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <!-- Boutons gestion styles -->
+        <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,5,0,15">
+            <Button Content="+ Ajouter un style" Command="{Binding AddStyleCommand}"
+                    Width="160" Height="32" Margin="0,0,10,0"/>
+            <Button Content="✕ Supprimer le style sélectionné" Command="{Binding RemoveStyleCommand}"
+                    Width="230" Height="32" Margin="0,0,10,0"/>
+            <Button Content="↺ Réinitialiser" Command="{Binding ResetCommand}"
+                    Width="130" Height="32"/>
+        </StackPanel>
+
+        <!-- Sauvegarder -->
+        <Button Grid.Row="5" Content="💾 Sauvegarder la configuration" Command="{Binding SaveCommand}"
+                HorizontalAlignment="Right" Width="240" Height="36"/>
+    </Grid>
+</Window>

@@ -1,0 +1,66 @@
+<Window x:Class="FabLab_Etiquette.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="FabLab Étiquette — Orano" Height="420" Width="620"
+        Icon="/Assets/fablab_icon.ico"
+        WindowStartupLocation="CenterScreen"
+        materialDesign:ColorZoneAssist.Mode="PrimaryMid">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Titre -->
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,18,0,12">
+            <TextBlock Text="FabLab Étiquette"
+                       HorizontalAlignment="Center"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       Margin="0,0,0,6"/>
+            <TextBlock Text="Outil de création de fichiers PDF pour découpeuse laser"
+                       HorizontalAlignment="Center"
+                       FontSize="12"
+                       Foreground="Gray"/>
+        </StackPanel>
+
+        <!-- Boutons principaux -->
+        <StackPanel Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <Button Content="Créer une étiquette PDF"
+                    Width="280" Height="54"
+                    Click="OpenCreatePdfView_Click"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Margin="0,8"/>
+
+            <Button Content="Standardiser un fichier PDF existant"
+                    Width="280" Height="54"
+                    Click="OpenStandardizePdfView_Click"
+                    Style="{StaticResource MaterialDesignRaisedButton}"
+                    Margin="0,8"/>
+
+            <Button Content="Administration"
+                    Width="280" Height="40"
+                    Click="OpenAdminWindow_Click"
+                    Style="{StaticResource MaterialDesignOutlinedButton}"
+                    Margin="0,16,0,0"/>
+        </StackPanel>
+
+        <!-- Logos en bas -->
+        <Grid Grid.Row="2" Margin="0,0,0,10">
+            <Image Source="/Assets/Fablab_Logo.png"
+                   Width="80" Height="80"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Bottom"
+                   Margin="20,0"/>
+
+            <Image Source="/Assets/Logo_Orano.PNG"
+                   Width="80" Height="80"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Bottom"
+                   Margin="20,0"/>
+        </Grid>
+    </Grid>
+</Window>
